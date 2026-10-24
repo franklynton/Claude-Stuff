@@ -6,6 +6,7 @@ import type { Pet } from "@/types/db";
 import { type Brain, learnFromChat, remember } from "@/lib/brain";
 import { type ChatTurn, askChat } from "@/lib/askPet";
 import { type Question, learnAnswer, opener } from "@/lib/openers";
+import { clockTime } from "@/lib/clock";
 import Win98Window from "./Win98Window";
 
 interface Props {
@@ -20,11 +21,14 @@ function speakBlips(text: string, pet: Pet) {
   [...text.slice(0, 24)].forEach((ch, i) => setTimeout(() => playBlip(ch, i, pet), i * typingDelay(pet)));
 }
 
+// A chat line plus when it was sent (the time stays out of what's sent to the AI).
+type Line = ChatTurn & { at: number };
+
 // How long you can stay quiet before the pet starts talking to you.
 const QUIET_MS = [20_000, 40_000];
 
 export default function PetChat({ pet, brain, setBrain, asleep }: Props) {
-  const [lines, setLines] = useState<ChatTurn[]>([]);
+  const [lines, setLines] = useState<Line[]>([]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const question = useRef<Question>(null);
@@ -40,7 +44,7 @@ export default function PetChat({ pet, brain, setBrain, asleep }: Props) {
       const o = busy ? null : opener(p, b, zzz);
       if (!o) return setLines((l) => [...l]); // nothing to say; re-arm the timer
       question.current = o.question;
-      setLines((l) => [...l, { from: "pet", text: o.text }]);
+      setLines((l) => [...l, { from: "pet", text: o.text, at: Date.now() }]);
       playSound("attention");
     }, wait);
     return () => clearTimeout(id);
@@ -49,7 +53,7 @@ export default function PetChat({ pet, brain, setBrain, asleep }: Props) {
   const send = async () => {
     const text = draft.trim();
     if (!text || sending) return;
-    const history = [...lines, { from: "you" as const, text }];
+    const history = [...lines, { from: "you" as const, text, at: Date.now() }];
     // Learn from the message first (name, likes, kind or mean words) so the reply can use it.
     const learned = learnAnswer(learnFromChat(brain, text), question.current, text);
     question.current = null;
@@ -59,12 +63,12 @@ export default function PetChat({ pet, brain, setBrain, asleep }: Props) {
     setSending(true);
     playSound("message");
     try {
-      const { reply, memory } = await askChat(pet, learned, history);
-      setLines((l) => [...l, { from: "pet", text: reply }]);
+      const { reply, memory } = await askChat(pet, learned, history.map(({ from, text }) => ({ from, text })));
+      setLines((l) => [...l, { from: "pet", text: reply, at: Date.now() }]);
       speakBlips(reply, pet);
       if (memory) setBrain((b) => remember(b, memory));
     } catch {
-      setLines((l) => [...l, { from: "pet", text: "ERROR 404: brain not found" }]);
+      setLines((l) => [...l, { from: "pet", text: "ERROR 404: brain not found", at: Date.now() }]);
     } finally {
       setSending(false);
     }
@@ -76,6 +80,7 @@ export default function PetChat({ pet, brain, setBrain, asleep }: Props) {
         {lines.length === 0 && <p className="text-gray-500">{pet.name} can only just talk. Teach it! Tell it your name, what you like, or facts like &ldquo;pizza is yummy&rdquo;.</p>}
         {lines.map((line, i) => (
           <p key={i} className="my-1">
+            <span className="text-gray-500">({clockTime(line.at)})</span>{" "}
             <b className={line.from === "you" ? "text-[#c00000]" : "text-[#000080]"}>
               {line.from === "you" ? brain.ownerName ?? "You" : pet.name}:
             </b>{" "}
