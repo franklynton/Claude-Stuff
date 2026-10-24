@@ -7,6 +7,7 @@ import { type Brain, learnFromChat, remember } from "@/lib/brain";
 import { type ChatTurn, askChat } from "@/lib/askPet";
 import { type Question, learnAnswer, opener } from "@/lib/openers";
 import { clockTime } from "@/lib/clock";
+import { canSpeak, setVoiceOn, speak, voiceOn } from "@/lib/voice";
 import Win98Window from "./Win98Window";
 
 interface Props {
@@ -32,20 +33,28 @@ export default function PetChat({ pet, brain, setBrain, asleep }: Props) {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const question = useRef<Question>(null);
+  // Voice support and setting are read after mount, so server and browser render the same.
+  const [canTalk, setCanTalk] = useState(false);
+  const [voice, setVoice] = useState(false);
+  useEffect(() => {
+    setCanTalk(canSpeak());
+    setVoice(canSpeak() && voiceOn());
+  }, []);
   // Latest props for the idle timer, so it doesn't restart on every stat tick.
-  const latest = useRef({ pet, brain, asleep, sending });
-  latest.current = { pet, brain, asleep, sending };
+  const latest = useRef({ pet, brain, asleep, sending, voice });
+  latest.current = { pet, brain, asleep, sending, voice };
 
   // After a quiet spell, the pet says something (often a question) on its own.
   useEffect(() => {
     const wait = QUIET_MS[0] + Math.random() * (QUIET_MS[1] - QUIET_MS[0]);
     const id = setTimeout(() => {
-      const { pet: p, brain: b, asleep: zzz, sending: busy } = latest.current;
+      const { pet: p, brain: b, asleep: zzz, sending: busy, voice: talk } = latest.current;
       const o = busy ? null : opener(p, b, zzz);
       if (!o) return setLines((l) => [...l]); // nothing to say; re-arm the timer
       question.current = o.question;
       setLines((l) => [...l, { from: "pet", text: o.text, at: Date.now() }]);
       playSound("attention");
+      if (talk) speak(o.text, p, b.stage);
     }, wait);
     return () => clearTimeout(id);
   }, [lines]);
@@ -65,7 +74,9 @@ export default function PetChat({ pet, brain, setBrain, asleep }: Props) {
     try {
       const { reply, memory } = await askChat(pet, learned, history.map(({ from, text }) => ({ from, text })));
       setLines((l) => [...l, { from: "pet", text: reply, at: Date.now() }]);
-      speakBlips(reply, pet);
+      // Out loud if voice is on, otherwise the old beep-per-letter voice.
+      if (voice) speak(reply, pet, learned.stage);
+      else speakBlips(reply, pet);
       if (memory) setBrain((b) => remember(b, memory));
     } catch {
       setLines((l) => [...l, { from: "pet", text: "ERROR 404: brain not found", at: Date.now() }]);
@@ -100,6 +111,18 @@ export default function PetChat({ pet, brain, setBrain, asleep }: Props) {
         <button type="submit" disabled={sending || !draft.trim()}>
           Send
         </button>
+        {canTalk && (
+          <button
+            type="button"
+            title="Read replies out loud"
+            onClick={() => {
+              setVoiceOn(!voice);
+              setVoice(!voice);
+            }}
+          >
+            {voice ? "🔊 Voice" : "🔇 Voice"}
+          </button>
+        )}
       </form>
     </Win98Window>
   );
