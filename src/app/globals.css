@@ -103,6 +103,17 @@ body {
   }
 }
 
+/* 98.css draws button text as a dark shadow under transparent text. Emoji (items,
+   coins, icons) came out as black blobs that way, so draw the text directly. */
+.desktop button:not(:disabled) {
+  color: #222;
+  text-shadow: none;
+}
+.desktop button:not(:disabled):active {
+  text-shadow: none;
+  transform: translate(1px, 1px);
+}
+
 /* Lobby: a Club Penguin-style plaza with a sky and a floor */
 .lobby-room {
   background: linear-gradient(#87ceeb 0 28%, #ffd27f 28% 30%, #c8a2c8 30%);
