@@ -26,6 +26,7 @@ export default function House({ pet, progress, asleep, setAsleep, apply, onPlayG
   const [roomKey, setRoomKey] = useState<RoomKey>("living");
   const [particles, setParticles] = useState<Particle[]>([]);
   const [hopping, setHopping] = useState(false);
+  const [balls, setBalls] = useState<number[]>([]);
   const [notice, setNotice] = useState("");
   const petRef = useRef<HTMLDivElement>(null);
   const nextId = useRef(0);
@@ -36,6 +37,13 @@ export default function House({ pet, progress, asleep, setAsleep, apply, onPlayG
     const added = Array.from({ length: count }, () => ({ id: nextId.current++, icon, x: 20 + Math.random() * 60 }));
     setParticles((p) => [...p, ...added]);
     setTimeout(() => setParticles((p) => p.filter((x) => !added.includes(x))), 1000);
+  };
+
+  // Each throw adds a ball that bounces around the room for a few seconds.
+  const throwBall = () => {
+    const id = nextId.current++;
+    setBalls((b) => [...b.slice(-2), id]);
+    setTimeout(() => setBalls((b) => b.filter((x) => x !== id)), 5000);
   };
 
   const hop = () => {
@@ -59,6 +67,7 @@ export default function House({ pet, progress, asleep, setAsleep, apply, onPlayG
   const goTo = (key: RoomKey) => {
     if (asleep) setAsleep(false); // leaving the bedroom wakes it up
     setNotice("");
+    setBalls([]);
     setRoomKey(key);
   };
 
@@ -85,6 +94,7 @@ export default function House({ pet, progress, asleep, setAsleep, apply, onPlayG
           dark={asleep}
           hopping={hopping}
           particles={particles}
+          balls={balls}
           onPetClick={
             roomKey === "living"
               ? () => {
@@ -155,7 +165,7 @@ export default function House({ pet, progress, asleep, setAsleep, apply, onPlayG
                   onClick={() => {
                     apply(BALL, { xp: 2, event: { type: "ball" } });
                     playSound("ball_throw");
-                    burst("⚽");
+                    throwBall();
                     hop();
                   }}
                   disabled={pet.sleep < 5}
