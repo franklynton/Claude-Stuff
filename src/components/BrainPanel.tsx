@@ -11,7 +11,7 @@ const COUNT_LABELS: Record<string, string> = {
   pat: "Patted",
   scrub: "Scrubbed",
   ball: "Ball games",
-  game: "Byte Catcher",
+  game: "Minigames played",
   sleep: "Naps",
   chat: "Messages",
   neglect: "Times neglected",

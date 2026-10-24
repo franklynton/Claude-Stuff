@@ -42,7 +42,8 @@ import {
 import BrainPanel from "./BrainPanel";
 import Lobby from "./Lobby";
 import GrowUpPanel from "./GrowUpPanel";
-import ByteCatcher from "./ByteCatcher";
+import CoinCatcher from "./CoinCatcher";
+import Snake from "./Snake";
 import HatchForm from "./HatchForm";
 import House from "./House";
 import PetChat from "./PetChat";
@@ -61,6 +62,7 @@ export default function PetHome({ username, onLogOff }: { username?: string; onL
   const [asleep, setAsleep] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const [gameOpen, setGameOpen] = useState(false);
+  const [snakeOpen, setSnakeOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -254,7 +256,16 @@ export default function PetHome({ username, onLogOff }: { username?: string; onL
     setConfirmDelete(false);
     setShopOpen(false);
     setGameOpen(false);
+    setSnakeOpen(false);
     setEditorOpen(false);
+  };
+
+  // Both minigames pay out the same way: a coin per point, XP, and a fun boost.
+  const finishGame = (name: string) => (score: number) => {
+    reward(score, score * 2);
+    if (score > 0) setTimeout(() => playSound("coin"), 900);
+    learn({ type: "game", score, name });
+    setPet((p) => (p ? care(p, { fun: 20, sleep: -5 }) : p));
   };
 
   const glitch = pet?.glitch_level ?? 0;
@@ -343,6 +354,7 @@ export default function PetHome({ username, onLogOff }: { username?: string; onL
                   setAsleep={setSleeping}
                   apply={apply}
                   onPlayGame={() => setGameOpen(true)}
+                  onPlaySnake={() => setSnakeOpen(true)}
                 />
                 <section className="field-row mt-2 justify-end">
                   {confirmDelete ? (
@@ -386,17 +398,9 @@ export default function PetHome({ username, onLogOff }: { username?: string; onL
                 />
               )}
               {gameOpen && (
-                <ByteCatcher
-                  pixels={pet.pixel_data}
-                  onFinish={(score) => {
-                    reward(score, score * 2);
-                    if (score > 0) setTimeout(() => playSound("coin"), 900);
-                    learn({ type: "game", score });
-                    setPet((p) => (p ? care(p, { fun: 20, sleep: -5 }) : p));
-                  }}
-                  onClose={() => setGameOpen(false)}
-                />
+                <CoinCatcher pixels={pet.pixel_data} onFinish={finishGame("Coin Catcher")} onClose={() => setGameOpen(false)} />
               )}
+              {snakeOpen && <Snake onFinish={finishGame("Snake")} onClose={() => setSnakeOpen(false)} />}
               {shopOpen && (
                 <Shop
                   progress={progress}

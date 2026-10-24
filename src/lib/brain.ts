@@ -75,7 +75,7 @@ export const stageOf = (b: Brain) => b.stage;
 
 export const SKILLS = [
   { key: "thinking", name: "Thinking", icon: "🧠", how: "chat, teach it words and facts, feed it new foods" },
-  { key: "motor", name: "Motor", icon: "🏃", how: "throw the ball, play Byte Catcher" },
+  { key: "motor", name: "Motor", icon: "🏃", how: "throw the ball, play Coin Catcher or Snake" },
   { key: "social", name: "Social", icon: "💬", how: "chat, pat it, be kind" },
   { key: "creativity", name: "Creativity", icon: "🎨", how: "redraw its look, dress it up" },
 ] as const;
@@ -157,7 +157,7 @@ export type BrainEvent =
   | { type: "pat" }
   | { type: "scrub" }
   | { type: "ball" }
-  | { type: "game"; score: number }
+  | { type: "game"; score: number; name: string }
   | { type: "sleep" }
   | { type: "redraw" }
   | { type: "dressup" };
@@ -188,8 +188,8 @@ export function observe(b: Brain, e: BrainEvent, pet: Pet): Brain {
       next = gainSkill(hear(like(next, "the ball", 0.8), "ball"), "motor", 5);
       return nudge(next, { play: 2, cheer: 0.5 });
     case "game":
-      if (e.score >= 15) next = remember(next, `We scored ${e.score} at Byte Catcher!`);
-      next = gainSkill(like(next, "Byte Catcher", 1), "motor", 5 + Math.round(e.score / 2));
+      if (e.score >= 15) next = remember(next, `We scored ${e.score} at ${e.name}!`);
+      next = gainSkill(like(next, e.name, 1), "motor", 5 + Math.round(e.score / 2));
       return nudge(next, { play: 3, cheer: 1 });
     case "sleep":
       return nudge(next, { play: -1 });

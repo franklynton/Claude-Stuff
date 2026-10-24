@@ -19,7 +19,7 @@ export const ROOMS: { key: RoomKey; name: string; hint: string; wall: string; fl
   { key: "kitchen", name: "Kitchen", hint: "Drag food onto your bug to feed it.", wall: "#c0ffc0", floor: "#e0e0e0" },
   { key: "bathroom", name: "Bathroom", hint: "Drag the soap over your bug to scrub it clean.", wall: "#a0e0ff", floor: "#ffffff" },
   { key: "bedroom", name: "Bedroom", hint: "Turn the lamp off to let your bug sleep.", wall: "#c0a0ff", floor: "#604080" },
-  { key: "playroom", name: "Playroom", hint: "Throw the ball, or play Byte Catcher to earn coins.", wall: "#ffc0e0", floor: "#40a040" },
+  { key: "playroom", name: "Playroom", hint: "Throw the ball, or play Coin Catcher or Snake to earn coins.", wall: "#ffc0e0", floor: "#40a040" },
   { key: "lab", name: "Lab", hint: "Drag a potion onto your bug.", wall: "#d0d0d0", floor: "#808080" },
 ];
 

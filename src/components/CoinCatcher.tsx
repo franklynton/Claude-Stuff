@@ -29,7 +29,7 @@ interface Props {
 
 // Minigame: move your bug with the mouse or arrow keys to catch falling coins (+1)
 // and dodge Y2K bombs (-3). Score becomes coins.
-export default function ByteCatcher({ pixels, onFinish, onClose }: Props) {
+export default function CoinCatcher({ pixels, onFinish, onClose }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [state, setState] = useState<"ready" | "playing" | "over">("ready");
   const [score, setScore] = useState(0);
@@ -144,7 +144,7 @@ export default function ByteCatcher({ pixels, onFinish, onClose }: Props) {
   }, [state, pixels]);
 
   return (
-    <Win98Window title="ByteCatcher.exe" className="w-[344px]" onClose={onClose}>
+    <Win98Window title="CoinCatcher.exe" className="w-[344px]" onClose={onClose}>
       <div className="mb-1 flex justify-between">
         <span>Score: {score}</span>
         <span>Time: {timeLeft}s</span>

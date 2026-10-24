@@ -18,10 +18,11 @@ interface Props {
   // Applies a care effect; returns false if the player can't afford it.
   apply: (effect: Effect, opts?: { cost?: number; xp?: number; event?: BrainEvent }) => boolean;
   onPlayGame: () => void;
+  onPlaySnake: () => void;
 }
 
 // The pet's house: tabs for each room, the room scene, and that room's items.
-export default function House({ pet, progress, asleep, setAsleep, apply, onPlayGame }: Props) {
+export default function House({ pet, progress, asleep, setAsleep, apply, onPlayGame, onPlaySnake }: Props) {
   const lastScrub = useRef(0);
   const [roomKey, setRoomKey] = useState<RoomKey>("living");
   const [particles, setParticles] = useState<Particle[]>([]);
@@ -54,7 +55,7 @@ export default function House({ pet, progress, asleep, setAsleep, apply, onPlayG
   const giveItem = (item: Item, icon: string, event: BrainEvent) => {
     if (!apply(item.effect, { cost: item.price, xp: 3, event })) {
       playSound("denied");
-      setNotice(`Not enough coins for ${item.name}. Play Byte Catcher in the Playroom to earn more!`);
+      setNotice(`Not enough coins for ${item.name}. Play Coin Catcher in the Playroom to earn more!`);
       return;
     }
     setNotice("");
@@ -175,7 +176,12 @@ export default function House({ pet, progress, asleep, setAsleep, apply, onPlayG
                 </button>
                 <button className="flex !min-w-0 flex-col items-center !px-3" onClick={onPlayGame}>
                   <span className="text-2xl leading-none">🕹️</span>
-                  <span>Byte Catcher</span>
+                  <span>Coin Catcher</span>
+                  <span className="text-[10px] text-gray-700">earn coins</span>
+                </button>
+                <button className="flex !min-w-0 flex-col items-center !px-3" onClick={onPlaySnake}>
+                  <span className="text-2xl leading-none">🐍</span>
+                  <span>Snake</span>
                   <span className="text-[10px] text-gray-700">earn coins</span>
                 </button>
               </>
