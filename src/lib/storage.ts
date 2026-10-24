@@ -1,4 +1,5 @@
 import type { Pet } from "@/types/db";
+import type { Brain } from "./brain";
 import { type Progress, START_PROGRESS } from "./progress";
 
 // Browser save until Supabase auth + the pets table are set up (priority 2).
@@ -42,9 +43,27 @@ export function saveProgress(progress: Progress): void {
   } catch {}
 }
 
+const BRAIN_KEY = "millennium-bug:brain";
+
+export function loadBrain(): Brain | null {
+  try {
+    const raw = localStorage.getItem(BRAIN_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveBrain(brain: Brain): void {
+  try {
+    localStorage.setItem(BRAIN_KEY, JSON.stringify(brain));
+  } catch {}
+}
+
 export function clearPet(): void {
   try {
     localStorage.removeItem(KEY);
     localStorage.removeItem(PROGRESS_KEY);
+    localStorage.removeItem(BRAIN_KEY);
   } catch {}
 }

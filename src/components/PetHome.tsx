@@ -4,7 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import type { Pet, PixelGrid } from "@/types/db";
 import { type Effect, care, decay, glitchText, newPet, personalityName } from "@/lib/pet";
 import { type Progress, START_PROGRESS, SHOP, type ShopKind, XP_PER_LEVEL, levelOf } from "@/lib/progress";
-import { clearPet, loadPet, loadProgress, savePet, saveProgress } from "@/lib/storage";
+import { type Brain, type BrainEvent, drift, newBrain, observe } from "@/lib/brain";
+import { clearPet, loadBrain, loadPet, loadProgress, saveBrain, savePet, saveProgress } from "@/lib/storage";
+import BrainPanel from "./BrainPanel";
 import ByteCatcher from "./ByteCatcher";
 import HatchForm from "./HatchForm";
 import House from "./House";
@@ -27,6 +29,8 @@ export default function PetHome() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [brain, setBrainState] = useState<Brain | null>(null);
+  const [brainOpen, setBrainOpen] = useState(false);
   const asleepRef = useRef(asleep);
   asleepRef.current = asleep;
 
@@ -34,7 +38,10 @@ export default function PetHome() {
   // catching up on the time the tab was closed.
   useEffect(() => {
     const saved = loadPet();
-    if (saved) setPet(decay(saved.pet, Date.now() - saved.savedAt));
+    if (saved) {
+      setPet(decay(saved.pet, Date.now() - saved.savedAt));
+      setBrainState(loadBrain() ?? newBrain(personalityName(saved.pet)));
+    }
     setProgress(loadProgress());
     setLoaded(true);
   }, []);
@@ -52,6 +59,23 @@ export default function PetHome() {
     if (loaded) saveProgress(progress);
   }, [progress, loaded]);
 
+  useEffect(() => {
+    if (brain) saveBrain(brain);
+  }, [brain]);
+
+  // Each tick, the brain notices neglect (and slowly forgets old habits).
+  useEffect(() => {
+    if (pet) setBrainState((b) => (b ? drift(b, pet) : b));
+  }, [pet]);
+
+  // The brain learns from what the player does to the pet.
+  const learn = (event: BrainEvent) => setBrainState((b) => (b && pet ? observe(b, event, pet) : b));
+  const setBrain = (update: (b: Brain) => Brain) => setBrainState((b) => (b ? update(b) : b));
+  const setSleeping = (on: boolean) => {
+    if (on && !asleep) learn({ type: "sleep" });
+    setAsleep(on);
+  };
+
   const showToast = (text: string) => {
     setToast(text);
     setTimeout(() => setToast(""), 3000);
@@ -67,10 +91,11 @@ export default function PetHome() {
     });
   };
 
-  const apply = (effect: Effect, opts: { cost?: number; xp?: number } = {}) => {
+  const apply = (effect: Effect, opts: { cost?: number; xp?: number; event?: BrainEvent } = {}) => {
     const cost = opts.cost ?? 0;
     if (cost > progress.coins) return false;
     setPet((p) => (p ? care(p, effect) : p));
+    if (opts.event) learn(opts.event);
     reward(-cost, opts.xp ?? 0);
     return true;
   };
@@ -83,12 +108,16 @@ export default function PetHome() {
   const wear = (kind: ShopKind, id: string | null) => setProgress((p) => ({ ...p, [kind]: id }));
 
   const hatch = (name: string, pixels: PixelGrid) => {
-    setPet(newPet(name, pixels));
+    const born = newPet(name, pixels);
+    setPet(born);
+    setBrainState(newBrain(personalityName(born)));
     setProgress(START_PROGRESS);
   };
   const reset = () => {
     clearPet();
     setPet(null);
+    setBrainState(null);
+    setBrainOpen(false);
     setConfirmDelete(false);
     setShopOpen(false);
     setGameOpen(false);
@@ -121,6 +150,9 @@ export default function PetHome() {
                 <span className="flex-1 text-right">
                   <b className="capitalize">{personalityName(pet)}</b>
                 </span>
+                <button className="!min-w-0" onClick={() => setBrainOpen((o) => !o)}>
+                  🧠 Brain
+                </button>
                 <button className="!min-w-0" onClick={() => setEditorOpen((o) => !o)}>
                   🎨 Edit look
                 </button>
@@ -142,7 +174,7 @@ export default function PetHome() {
                 pet={pet}
                 progress={progress}
                 asleep={asleep}
-                setAsleep={setAsleep}
+                setAsleep={setSleeping}
                 apply={apply}
                 onPlayGame={() => setGameOpen(true)}
               />
@@ -174,13 +206,17 @@ export default function PetHome() {
                   pixels={pet.pixel_data}
                   onFinish={(score) => {
                     reward(score, score * 2);
+                    learn({ type: "game", score });
                     setPet((p) => (p ? care(p, { fun: 20, sleep: -5 }) : p));
                   }}
                   onClose={() => setGameOpen(false)}
                 />
               )}
               {shopOpen && <Shop progress={progress} onBuy={buy} onWear={wear} onClose={() => setShopOpen(false)} />}
-              <PetChat pet={pet} />
+              {brainOpen && brain && (
+                <BrainPanel pet={pet} brain={brain} setBrain={setBrain} onClose={() => setBrainOpen(false)} />
+              )}
+              {brain && <PetChat pet={pet} brain={brain} setBrain={setBrain} />}
             </div>
           </>
         )}

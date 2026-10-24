@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { Pet } from "@/types/db";
+import type { BrainEvent } from "@/lib/brain";
 import type { Effect } from "@/lib/pet";
 import { type Progress, levelOf } from "@/lib/progress";
 import { BALL, FOODS, type Item, PAT, POTIONS, ROOMS, type RoomKey, SCRUB } from "@/lib/rooms";
@@ -14,7 +15,7 @@ interface Props {
   asleep: boolean;
   setAsleep: (asleep: boolean) => void;
   // Applies a care effect; returns false if the player can't afford it.
-  apply: (effect: Effect, opts?: { cost?: number; xp?: number }) => boolean;
+  apply: (effect: Effect, opts?: { cost?: number; xp?: number; event?: BrainEvent }) => boolean;
   onPlayGame: () => void;
 }
 
@@ -40,8 +41,8 @@ export default function House({ pet, progress, asleep, setAsleep, apply, onPlayG
     setTimeout(() => setHopping(false), 500);
   };
 
-  const giveItem = (item: Item, icon: string) => {
-    if (!apply(item.effect, { cost: item.price, xp: 3 })) {
+  const giveItem = (item: Item, icon: string, event: BrainEvent) => {
+    if (!apply(item.effect, { cost: item.price, xp: 3, event })) {
       setNotice(`Not enough coins for ${item.name}. Play Byte Catcher in the Playroom to earn more!`);
       return;
     }
@@ -82,7 +83,7 @@ export default function House({ pet, progress, asleep, setAsleep, apply, onPlayG
           onPetClick={
             roomKey === "living"
               ? () => {
-                  apply(PAT, { xp: 1 });
+                  apply(PAT, { xp: 1, event: { type: "pat" } });
                   burst("💖");
                 }
               : undefined
@@ -100,7 +101,7 @@ export default function House({ pet, progress, asleep, setAsleep, apply, onPlayG
                   sublabel={level < f.level ? `🔒 Lv ${f.level}` : `🪙 ${f.price}`}
                   disabled={level < f.level}
                   targetRef={petRef}
-                  onDrop={() => giveItem(f, "😋")}
+                  onDrop={() => giveItem(f, "😋", { type: "fed", item: f.name.toLowerCase() })}
                 />
               ))}
             {roomKey === "lab" &&
@@ -112,7 +113,7 @@ export default function House({ pet, progress, asleep, setAsleep, apply, onPlayG
                   sublabel={level < p.level ? `🔒 Lv ${p.level}` : `🪙 ${p.price}`}
                   disabled={level < p.level}
                   targetRef={petRef}
-                  onDrop={() => giveItem(p, "✨")}
+                  onDrop={() => giveItem(p, "✨", { type: "potion", item: p.name.toLowerCase() })}
                 />
               ))}
             {roomKey === "bathroom" && (
@@ -122,7 +123,7 @@ export default function House({ pet, progress, asleep, setAsleep, apply, onPlayG
                 sublabel="rub it on"
                 targetRef={petRef}
                 onRub={() => {
-                  apply(SCRUB, { xp: pet.cleanliness < 100 ? 1 : 0 });
+                  apply(SCRUB, { xp: pet.cleanliness < 100 ? 1 : 0, event: { type: "scrub" } });
                   burst("🫧");
                 }}
               />
@@ -138,7 +139,7 @@ export default function House({ pet, progress, asleep, setAsleep, apply, onPlayG
                 <button
                   className="flex !min-w-0 flex-col items-center !px-3"
                   onClick={() => {
-                    apply(BALL, { xp: 2 });
+                    apply(BALL, { xp: 2, event: { type: "ball" } });
                     burst("⚽");
                     hop();
                   }}
