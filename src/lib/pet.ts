@@ -188,7 +188,8 @@ export function newPet(
   };
 }
 
-const SLEEP_REFILL_PER_HOUR = 40;
+// 1 point per real second while asleep (on top of the half-speed sleep drain).
+const SLEEP_REFILL_PER_HOUR = 3600 / TIME_SCALE + DRAIN_PER_HOUR.sleep / 2;
 
 // Applies `ms` of real time to the pet's stats. While asleep, sleep refills
 // and the other needs drain at half speed.
