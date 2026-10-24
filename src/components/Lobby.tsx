@@ -10,6 +10,7 @@ import { playSound } from "@/lib/sound";
 import { clockTime } from "@/lib/clock";
 import PetSprite from "./PetSprite";
 import Win98Window from "./Win98Window";
+import { useAutoScroll } from "@/lib/useAutoScroll";
 
 interface Props {
   pet: Pet;
@@ -60,6 +61,7 @@ export default function Lobby({ pet, brain, userId, onSocial, onClose }: Props) 
   const [peers, setPeers] = useState<LobbyPet[]>([]);
   const [bubbles, setBubbles] = useState<Record<string, { text: string; until: number }>>({});
   const [log, setLog] = useState<(VisitLine & { at: number })[]>([]);
+  const logBox = useAutoScroll<HTMLDivElement>(log);
   const [selected, setSelected] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [online, setOnline] = useState(false);
@@ -220,7 +222,7 @@ export default function Lobby({ pet, brain, userId, onSocial, onClose }: Props) 
       ) : (
         <p className="!my-1 text-gray-700">Click the floor to walk. Click another bug to visit it.</p>
       )}
-      <div className="sunken-panel mt-1 h-20 overflow-y-auto bg-white p-1">
+      <div ref={logBox} className="sunken-panel mt-1 h-20 overflow-y-auto bg-white p-1">
         {log.length === 0 && <span className="text-gray-500">Lobby chat appears here.</span>}
         {log.map((l, i) => (
           <div key={i}>

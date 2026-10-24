@@ -9,6 +9,7 @@ import { type Question, learnAnswer, opener } from "@/lib/openers";
 import { clockTime } from "@/lib/clock";
 import { canSpeak, setVoiceOn, speak, voiceOn } from "@/lib/voice";
 import Win98Window from "./Win98Window";
+import { useAutoScroll } from "@/lib/useAutoScroll";
 
 interface Props {
   pet: Pet;
@@ -32,6 +33,7 @@ export default function PetChat({ pet, brain, setBrain, asleep }: Props) {
   const [lines, setLines] = useState<Line[]>([]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const chatBox = useAutoScroll<HTMLDivElement>(`${lines.length}-${sending}`); // also shows "is typing..."
   const question = useRef<Question>(null);
   // Voice support and setting are read after mount, so server and browser render the same.
   const [canTalk, setCanTalk] = useState(false);
@@ -87,7 +89,7 @@ export default function PetChat({ pet, brain, setBrain, asleep }: Props) {
 
   return (
     <Win98Window title={`Chat with ${pet.name} - AIM`} className="w-[360px]">
-      <div className="sunken-panel h-64 overflow-y-auto bg-white p-2">
+      <div ref={chatBox} className="sunken-panel h-64 overflow-y-auto bg-white p-2">
         {lines.length === 0 && <p className="text-gray-500">{pet.name} can only just talk. Teach it! Tell it your name, what you like, or facts like &ldquo;pizza is yummy&rdquo;.</p>}
         {lines.map((line, i) => (
           <p key={i} className="my-1">
