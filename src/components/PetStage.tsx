@@ -3,6 +3,7 @@
 import type { RefObject } from "react";
 import type { Pet } from "@/types/db";
 import { findItem } from "@/lib/progress";
+import { headSpot } from "@/lib/pet";
 import PetSprite from "./PetSprite";
 
 export interface Particle {
@@ -37,6 +38,12 @@ export default function PetStage(props: Props) {
   const dirt = pet.cleanliness < 60 ? Math.ceil((60 - pet.cleanliness) / 7.5) : 0;
   const flies = pet.cleanliness < 25;
   const sad = pet.mood < 30 || pet.health < 30;
+  // Hats and glasses are sized and placed on this bug's head (sprite drawn at 10px per pixel).
+  const S = 10;
+  const head = headSpot(pet.pixel_data);
+  const headX = (head.x + 0.5) * S;
+  const hatSize = Math.max(32, head.width * S * 0.95);
+  const glassesSize = Math.max(28, head.width * S * 0.85);
 
   return (
     <div className="relative h-[260px] overflow-hidden" style={{ background: floor }}>
@@ -49,15 +56,26 @@ export default function PetStage(props: Props) {
         onClick={onPetClick}
         style={{ filter: sad ? "saturate(0.4)" : undefined }}
       >
-        <PetSprite pixels={pet.pixel_data} glitch={pet.glitch_level} scale={10} />
-        {hat && (
-          <span className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 text-5xl">{findItem(hat)?.icon}</span>
-        )}
-        {glasses && (
-          <span className="pointer-events-none absolute left-1/2 top-[18%] -translate-x-1/2 text-4xl">
-            {findItem(glasses)?.icon}
-          </span>
-        )}
+        {/* The bug and its outfit bob together so the hat stays on. */}
+        <div className="animate-idle relative">
+          <PetSprite pixels={pet.pixel_data} glitch={pet.glitch_level} scale={S} idle={false} />
+          {hat && (
+            <span
+              className="pointer-events-none absolute -translate-x-1/2 leading-none"
+              style={{ left: headX, top: head.top * S - hatSize * 0.8, fontSize: hatSize }}
+            >
+              {findItem(hat)?.icon}
+            </span>
+          )}
+          {glasses && (
+            <span
+              className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 leading-none"
+              style={{ left: headX, top: (head.eyes + 0.5) * S, fontSize: glassesSize }}
+            >
+              {findItem(glasses)?.icon}
+            </span>
+          )}
+        </div>
         {DIRT.slice(0, dirt).map(([x, y], i) => (
           <span
             key={i}
