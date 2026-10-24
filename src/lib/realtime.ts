@@ -215,7 +215,8 @@ function joinLocal(me: LobbyPet, handlers: LobbyHandlers): LobbyRoom {
       // Two BroadcastChannels in the same document do hear each other, so a double
       // mount would otherwise show us a copy of ourselves.
       if (data.pet.id === identity.id) return;
-      const isNew = !peers.has(data.pet.id);
+      // A refreshed tab keeps its id, so it also counts as new when it says it just joined.
+      const isNew = !peers.has(data.pet.id) || data.joined;
       peers.set(data.pet.id, { pet: data.pet, seen: Date.now() });
       if (isNew) {
         bc.postMessage({ kind: "presence", pet: identity }); // say hi back to newcomers
@@ -240,7 +241,7 @@ function joinLocal(me: LobbyPet, handlers: LobbyHandlers): LobbyRoom {
     for (const [id, p] of peers) if (Date.now() - p.seen > STALE_MS) peers.delete(id);
     emit();
   }, BEAT_MS);
-  bc.postMessage({ kind: "presence", pet: identity });
+  bc.postMessage({ kind: "presence", pet: identity, joined: true });
 
   return {
     online: false,
