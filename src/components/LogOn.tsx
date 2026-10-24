@@ -25,5 +25,5 @@ export default function LogOn() {
   // Set before PetHome mounts so its first load reads this account's save. The key
   // remounts PetHome when switching accounts so no state leaks between users.
   setSaveSlot(user.id);
-  return <PetHome key={user.id} username={user.username} onLogOff={logOut} />;
+  return <PetHome key={user.id} userId={user.id} username={user.username} onLogOff={logOut} />;
 }
