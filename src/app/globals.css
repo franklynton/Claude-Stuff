@@ -102,3 +102,173 @@ body {
     animation: none;
   }
 }
+
+/* ---------- XP-style login screen (from the login branch) ---------- */
+
+/* 98.css styles every button and input; undo that inside the login screen so it looks like XP, not 98. */
+.xp-screen {
+  background: #5a7edc;
+  font-family: Tahoma, Verdana, "Segoe UI", sans-serif;
+}
+
+:where(.xp-screen) button {
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
+  color: white;
+  text-shadow: none;
+  font: inherit;
+}
+
+:where(.xp-screen) button:focus {
+  outline: none;
+}
+
+:where(.xp-screen) input,
+:where(.xp-screen) label {
+  display: block;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.xp-pick-selected {
+  box-shadow: 0 0 0 2px #ffcc33;
+}
+
+.xp-top {
+  height: 10vh;
+  min-height: 56px;
+  background: #00309c;
+  border-bottom: 2px solid transparent;
+  border-image: linear-gradient(to right, #00309c 0%, #6b8ff0 20%, #c6d5ff 50%, #6b8ff0 80%, #00309c 100%) 1;
+}
+
+.xp-middle {
+  background: #5a7edc;
+  min-height: 0;
+}
+
+.xp-left {
+  background:
+    radial-gradient(circle at 8% 4%, rgba(255, 255, 255, 0.35) 0%, transparent 38%),
+    linear-gradient(to bottom, #5a7edc 70%, #8ea9ec 100%);
+}
+
+.xp-divider {
+  width: 1px;
+  background: linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.75) 35%, rgba(255, 255, 255, 0.75) 65%, transparent 100%);
+}
+
+.xp-bottom {
+  height: 12vh;
+  min-height: 64px;
+  background: linear-gradient(to right, #2a3fa8 0%, #2c33a2 50%, #1d36a0 100%);
+  border-top: 2px solid transparent;
+  border-image: linear-gradient(to right, #2a3fa8 0%, #f99736 40%, #f99736 60%, #1d36a0 100%) 1;
+}
+
+.xp-welcome {
+  font-family: "Franklin Gothic Medium", "Trebuchet MS", Tahoma, sans-serif;
+  font-size: 56px;
+  font-weight: bold;
+  font-style: italic;
+  color: white;
+  letter-spacing: -1px;
+  text-shadow: 2px 2px 3px rgba(0, 0, 40, 0.35);
+}
+
+.xp-avatar {
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 4px;
+  box-shadow: 1px 1px 3px rgba(0, 0, 40, 0.4);
+  line-height: 1;
+}
+
+.xp-avatar-new {
+  background: rgba(255, 255, 255, 0.12);
+  border-style: dashed;
+}
+
+.xp-tile {
+  padding: 8px 10px;
+  border-radius: 8px 0 0 8px;
+  transition: opacity 0.15s;
+}
+
+.xp-tile:hover .xp-avatar,
+.xp-tile-selected .xp-avatar {
+  border-color: #ffcc33;
+}
+
+.xp-tile-selected {
+  background: linear-gradient(to right, #00309c 0%, rgba(0, 48, 156, 0.6) 55%, transparent 100%);
+}
+
+.xp-input {
+  height: 24px;
+  padding: 0 6px;
+  border: 1px solid #7f9db9;
+  border-radius: 3px;
+  background: white;
+  color: black;
+  font-size: 13px;
+  outline: none;
+}
+
+.xp-input:focus {
+  border-color: #ffcc33;
+}
+
+.xp-go-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid white;
+  border-radius: 4px;
+  background: linear-gradient(to bottom, #5fd35f 0%, #2fa62f 55%, #1e8a1e 100%);
+}
+
+.xp-go-btn:hover {
+  filter: brightness(1.15);
+}
+
+.xp-balloon {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  z-index: 10;
+  width: 280px;
+  padding: 8px 10px;
+  border: 1px solid #000;
+  border-radius: 8px;
+  background: #ffffe1;
+  color: black;
+  font-size: 12px;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.35);
+}
+
+/* little tail pointing up at the input */
+.xp-balloon::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 20px;
+  border: 10px solid transparent;
+  border-top: 0;
+  border-bottom-color: #000;
+}
+
+.xp-balloon::after {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 21px;
+  border: 9px solid transparent;
+  border-top: 0;
+  border-bottom-color: #ffffe1;
+}
