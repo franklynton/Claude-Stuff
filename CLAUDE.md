@@ -45,7 +45,9 @@ supabase/
 
 ## Data model (keep column names exactly as written)
 - `profiles`: id (uuid, = auth user id), username, coins (int, default 0), created_at
-- `pets`: id, owner_id (-> profiles.id), name, personality (text), pixel_data (jsonb, 16x16 grid of colour strings), hunger (int 0-100), mood (int 0-100), glitch_level (int 0-100), last_fed_at, created_at
+- `pets`: id, owner_id (-> profiles.id), name, personality (text), pixel_data (jsonb, 16x16 grid of colour strings), hunger (int 0-100), mood (int 0-100, average of the needs), love (int 0-100), cleanliness (int 0-100), health (int 0-100), fun (int 0-100), sleep (int 0-100), glitch_level (int 0-100), last_fed_at, created_at
+- `pet_progress`: pet_id (-> pets.id), xp (int), owned_items (jsonb, shop item ids), hat (text), glasses (text), wallpaper (text). Coins stay on `profiles.coins`.
+- `pet_brain`: pet_id (-> pets.id), traits (jsonb: cheer, play, cling, sweet, each -100 to 100), likes (jsonb), memories (jsonb, newest 20), counts (jsonb), owner_name (text), reflection (text), words (jsonb, vocabulary), skills (jsonb: thinking, motor, social, creativity XP), stage (int: 0 toddler .. 3 adult), age (int 0-100 through the stage)
 - `friendships`: id, requester_id, addressee_id, status ('pending' | 'accepted'), created_at
 - `clubs`: id, name, description, owner_id, created_at
 - `club_members`: club_id, user_id, joined_at
