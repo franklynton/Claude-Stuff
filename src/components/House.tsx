@@ -1,5 +1,6 @@
 "use client";
 
+import { playSound } from "@/lib/sound";
 import { useRef, useState } from "react";
 import type { Pet } from "@/types/db";
 import type { BrainEvent } from "@/lib/brain";
@@ -21,6 +22,7 @@ interface Props {
 
 // The pet's house: tabs for each room, the room scene, and that room's items.
 export default function House({ pet, progress, asleep, setAsleep, apply, onPlayGame }: Props) {
+  const lastScrub = useRef(0);
   const [roomKey, setRoomKey] = useState<RoomKey>("living");
   const [particles, setParticles] = useState<Particle[]>([]);
   const [hopping, setHopping] = useState(false);
@@ -43,10 +45,13 @@ export default function House({ pet, progress, asleep, setAsleep, apply, onPlayG
 
   const giveItem = (item: Item, icon: string, event: BrainEvent) => {
     if (!apply(item.effect, { cost: item.price, xp: 3, event })) {
+      playSound("denied");
       setNotice(`Not enough coins for ${item.name}. Play Byte Catcher in the Playroom to earn more!`);
       return;
     }
     setNotice("");
+    if (event.type === "potion") playSound("potion");
+    else playSound("feed").then(() => setTimeout(() => playSound("munch"), 300));
     burst(icon, 2);
     hop();
   };
@@ -84,6 +89,7 @@ export default function House({ pet, progress, asleep, setAsleep, apply, onPlayG
             roomKey === "living"
               ? () => {
                   apply(PAT, { xp: 1, event: { type: "pat" } });
+                  playSound(pet.love >= 90 ? "love" : "pet");
                   burst("💖");
                 }
               : undefined
@@ -124,12 +130,20 @@ export default function House({ pet, progress, asleep, setAsleep, apply, onPlayG
                 targetRef={petRef}
                 onRub={() => {
                   apply(SCRUB, { xp: pet.cleanliness < 100 ? 1 : 0, event: { type: "scrub" } });
+                  // onRub fires every 80ms; only bubble every half second
+                  if (Date.now() - lastScrub.current > 500) {
+                    lastScrub.current = Date.now();
+                    playSound("scrub", { volume: 0.6 });
+                  }
                   burst("🫧");
                 }}
               />
             )}
             {roomKey === "bedroom" && (
-              <button className="flex !min-w-0 flex-col items-center !px-3" onClick={() => setAsleep(!asleep)}>
+              <button className="flex !min-w-0 flex-col items-center !px-3" onClick={() => {
+                  playSound("lamp");
+                  setAsleep(!asleep);
+                }}>
                 <span className="text-2xl leading-none">{asleep ? "🌙" : "💡"}</span>
                 <span>{asleep ? "Lamp on (wake up)" : "Lamp off (sleep)"}</span>
               </button>
@@ -140,6 +154,7 @@ export default function House({ pet, progress, asleep, setAsleep, apply, onPlayG
                   className="flex !min-w-0 flex-col items-center !px-3"
                   onClick={() => {
                     apply(BALL, { xp: 2, event: { type: "ball" } });
+                    playSound("ball_throw");
                     burst("⚽");
                     hop();
                   }}
