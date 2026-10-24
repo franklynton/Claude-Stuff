@@ -4,6 +4,7 @@ import type { RefObject } from "react";
 import type { Pet } from "@/types/db";
 import { findItem } from "@/lib/progress";
 import { headSpot } from "@/lib/pet";
+import BouncyBall from "./BouncyBall";
 import PetSprite from "./PetSprite";
 
 export interface Particle {
@@ -23,6 +24,7 @@ interface Props {
   dark: boolean; // bedroom lamp off
   hopping: boolean;
   particles: Particle[];
+  balls?: number[]; // ids of thrown balls still bouncing
   onPetClick?: () => void;
 }
 
@@ -34,7 +36,7 @@ const DIRT = [
 // The room with the pet in it, plus everything drawn on top of the pet:
 // hat and glasses, dirt and flies, Zzz while asleep, and floating hearts or bubbles.
 export default function PetStage(props: Props) {
-  const { pet, petRef, wall, floor, wallpaper, hat, glasses, dark, hopping, particles, onPetClick } = props;
+  const { pet, petRef, wall, floor, wallpaper, hat, glasses, dark, hopping, particles, balls = [], onPetClick } = props;
   const dirt = pet.cleanliness < 60 ? Math.ceil((60 - pet.cleanliness) / 7.5) : 0;
   const flies = pet.cleanliness < 25;
   const sad = pet.mood < 30 || pet.health < 30;
@@ -99,6 +101,10 @@ export default function PetStage(props: Props) {
           </span>
         ))}
       </div>
+
+      {balls.map((id) => (
+        <BouncyBall key={id} />
+      ))}
 
       {dark && (
         <div className="pointer-events-none absolute inset-0 bg-[#000020]/75">
