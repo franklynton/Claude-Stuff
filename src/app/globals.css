@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+/* Y2K / Windows 98 desktop. 98.css styles the windows, buttons and inputs. */
+
+body {
+  margin: 0;
+  background: #008080;
+}
+
+.desktop {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Heavy neglect makes the whole desktop flicker. */
+.desktop-corrupt {
+  animation: corrupt 2s steps(1) infinite;
+}
+@keyframes corrupt {
+  0%, 90% { filter: none; transform: none; }
+  92% { filter: hue-rotate(90deg) invert(0.1); transform: translateX(3px); }
+  96% { filter: saturate(3); transform: translateX(-2px); }
+}
+
+.marquee-bar {
+  overflow: hidden;
+  white-space: nowrap;
+  background: #000080;
+  color: #ffff00;
+  font-weight: bold;
+  padding: 4px 0;
+}
+.marquee-bar span {
+  display: inline-block;
+  padding-left: 100%;
+  animation: marquee 18s linear infinite;
+}
+@keyframes marquee {
+  to { transform: translateX(-100%); }
+}
+
+.pixelated {
+  image-rendering: pixelated;
+}
+
+.animate-idle {
+  animation: idle 1.4s steps(2) infinite;
+}
+@keyframes idle {
+  50% { transform: translateY(-6px); }
+}
+
+.taskbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px;
+  background: silver;
+  box-shadow: inset 0 1px #fff;
+}
+.taskbar-clock {
+  flex: 0 0 auto;
+  padding: 2px 8px;
+}
