@@ -111,6 +111,42 @@ export function makePixels(shape: ShapeKey, colour: number): PixelGrid {
 
 export const DEFAULT_PIXELS = makePixels("beetle", 0);
 
+// Where the head is on a 16x16 drawing, in pixels, so hats and glasses fit any shape.
+// Uses the white eye pixels when there are any; otherwise guesses from the drawing's outline.
+export function headSpot(pixels: PixelGrid): { x: number; top: number; eyes: number; width: number } {
+  const filled: [number, number][] = [];
+  const white: [number, number][] = [];
+  pixels.forEach((row, y) =>
+    row.forEach((c, x) => {
+      if (!c) return;
+      filled.push([x, y]);
+      if (c.toLowerCase() === "#ffffff") white.push([x, y]);
+    }),
+  );
+  if (!filled.length) return { x: 7.5, top: 4, eyes: 6, width: 8 };
+  const xs = filled.map(([x]) => x);
+  const ys = filled.map(([, y]) => y);
+  const [minY, maxY] = [Math.min(...ys), Math.max(...ys)];
+
+  const eyeXs = white.map(([x]) => x);
+  const x = white.length ? (Math.min(...eyeXs) + Math.max(...eyeXs)) / 2 : (Math.min(...xs) + Math.max(...xs)) / 2;
+  const eyes = white.length ? Math.min(...white.map(([, y]) => y)) : Math.round(minY + (maxY - minY) * 0.3);
+
+  // Top of the head: the first row with a solid bit of drawing near the head (skips thin antennae).
+  const near = (y: number) => filled.filter(([fx, fy]) => fy === y && Math.abs(fx - x) <= 3).length;
+  let top = minY;
+  for (let y = minY; y <= eyes; y++) {
+    if (near(y) >= 3) {
+      top = y;
+      break;
+    }
+  }
+  // Head width: the drawing's span on the eye row around the head.
+  const row = filled.filter(([fx, fy]) => fy === eyes && Math.abs(fx - x) <= 5).map(([fx]) => fx);
+  const width = row.length ? Math.max(...row) - Math.min(...row) + 1 : 8;
+  return { x, top, eyes, width };
+}
+
 // Every bug hatches with a random personality.
 export function randomPersonality(): PersonalityKey {
   const keys = Object.keys(PERSONALITIES) as PersonalityKey[];
