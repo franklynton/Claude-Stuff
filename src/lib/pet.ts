@@ -14,7 +14,10 @@ const HEALTH_UP_PER_HOUR = 3;
 // Glitch builds while the pet is neglected and slowly heals while it's cared for.
 const GLITCH_UP_PER_HOUR = 25;
 const GLITCH_DOWN_PER_HOUR = 10;
+// When every need is well looked after, the glitch heals much faster.
+const GLITCH_DOWN_CARED_PER_HOUR = 40;
 const LOW = 30;
+const GOOD = 60;
 
 const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n * 100) / 100));
 
@@ -201,9 +204,9 @@ export function decay(pet: Pet, ms: number, asleep = false): Pet {
 
   const result = withMood(next);
   const neglected = result.hunger < LOW || result.health < LOW || result.mood < LOW;
-  result.glitch_level = clamp(
-    pet.glitch_level + (neglected ? GLITCH_UP_PER_HOUR : -GLITCH_DOWN_PER_HOUR) * hours,
-  );
+  const caredFor = [...NEEDS, "health" as const].every((k) => result[k] >= GOOD);
+  const glitchChange = neglected ? GLITCH_UP_PER_HOUR : caredFor ? -GLITCH_DOWN_CARED_PER_HOUR : -GLITCH_DOWN_PER_HOUR;
+  result.glitch_level = clamp(pet.glitch_level + glitchChange * hours);
   return result;
 }
 

@@ -5,7 +5,7 @@ import { useRef, useState } from "react";
 import type { Pet } from "@/types/db";
 import type { BrainEvent } from "@/lib/brain";
 import type { Effect } from "@/lib/pet";
-import { type Progress, levelOf } from "@/lib/progress";
+import { type Nudge, type Progress, levelOf } from "@/lib/progress";
 import { BALL, FOODS, type Item, PAT, POTIONS, ROOMS, type RoomKey, SCRUB } from "@/lib/rooms";
 import DragItem from "./DragItem";
 import PetStage, { type Particle } from "./PetStage";
@@ -19,10 +19,11 @@ interface Props {
   apply: (effect: Effect, opts?: { cost?: number; xp?: number; event?: BrainEvent }) => boolean;
   onPlayGame: () => void;
   onPlaySnake: () => void;
+  onNudge: (kind: "hat" | "glasses", nudge: Nudge | null) => void;
 }
 
 // The pet's house: tabs for each room, the room scene, and that room's items.
-export default function House({ pet, progress, asleep, setAsleep, apply, onPlayGame, onPlaySnake }: Props) {
+export default function House({ pet, progress, asleep, setAsleep, apply, onPlayGame, onPlaySnake, onNudge }: Props) {
   const lastScrub = useRef(0);
   const [roomKey, setRoomKey] = useState<RoomKey>("living");
   const [particles, setParticles] = useState<Particle[]>([]);
@@ -92,6 +93,8 @@ export default function House({ pet, progress, asleep, setAsleep, apply, onPlayG
           wallpaper={progress.wallpaper}
           hat={progress.hat}
           glasses={progress.glasses}
+          nudge={progress.nudge ?? {}}
+          onNudge={onNudge}
           dark={asleep}
           hopping={hopping}
           particles={particles}
