@@ -15,8 +15,11 @@ interface Drop {
   y: number;
   speed: number;
   bomb: boolean;
-  label: string;
 }
+
+// 8x8 pixel coin, drawn at 2x: o outline, y gold, w shine, d shade.
+const COIN = ["..oooo..", ".oyyyyo.", "oywyyyyo", "owyyyyyo", "oyyyyydo", "oyyyyydo", ".oyyddo.", "..oooo.."];
+const COIN_COLOURS: Record<string, string> = { o: "#b8860b", y: "#ffd700", w: "#fff8c0", d: "#e0a800" };
 
 interface Props {
   pixels: PixelGrid;
@@ -24,7 +27,7 @@ interface Props {
   onClose: () => void;
 }
 
-// Minigame: move your bug with the mouse or arrow keys to catch falling bits (+1)
+// Minigame: move your bug with the mouse or arrow keys to catch falling coins (+1)
 // and dodge Y2K bombs (-3). Score becomes coins.
 export default function ByteCatcher({ pixels, onFinish, onClose }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -76,7 +79,6 @@ export default function ByteCatcher({ pixels, onFinish, onClose }: Props) {
           y: -10,
           speed: 70 + Math.random() * 90,
           bomb,
-          label: bomb ? "💣" : Math.random() < 0.5 ? "1" : "0",
         });
         spawnIn = 0.35 + Math.random() * 0.4;
       }
@@ -98,8 +100,18 @@ export default function ByteCatcher({ pixels, onFinish, onClose }: Props) {
       ctx.font = "bold 16px monospace";
       ctx.textAlign = "center";
       for (const d of drops) {
-        ctx.fillStyle = "#00ff40";
-        ctx.fillText(d.label, d.x, d.y);
+        if (d.bomb) {
+          ctx.fillText("💣", d.x, d.y);
+          continue;
+        }
+        // Centre the coin where the old text sat (x is its middle, y its baseline).
+        COIN.forEach((row, cy) =>
+          [...row].forEach((ch, cx) => {
+            if (ch === ".") return;
+            ctx.fillStyle = COIN_COLOURS[ch];
+            ctx.fillRect(d.x - 8 + cx * 2, d.y - 14 + cy * 2, 2, 2);
+          }),
+        );
       }
       pixels.forEach((row, y) =>
         row.forEach((c, x) => {
@@ -143,10 +155,10 @@ export default function ByteCatcher({ pixels, onFinish, onClose }: Props) {
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/70 p-4 text-center text-[#00ff40]">
             {state === "over" ? (
               <p>
-                GAME OVER! You caught {score} bits and earned 🪙 {score} coins.
+                GAME OVER! You scored {score} and earned 🪙 {score} coins.
               </p>
             ) : (
-              <p>Catch the falling 1s and 0s. Dodge the 💣 Y2K bombs! Move with the mouse or arrow keys.</p>
+              <p>Catch the falling 🪙 coins. Dodge the 💣 Y2K bombs! Move with the mouse or arrow keys.</p>
             )}
             <button
               onClick={() => {
