@@ -6,6 +6,7 @@ import type { LobbyEvent, LobbyPet, VisitLine } from "@/types/lobby";
 import type { Brain } from "@/lib/brain";
 import { type LobbyRoom, joinLobby } from "@/lib/realtime";
 import { makeVisit } from "@/lib/visitChat";
+import { playSound } from "@/lib/sound";
 import PetSprite from "./PetSprite";
 import Win98Window from "./Win98Window";
 
@@ -57,15 +58,26 @@ export default function Lobby({ pet, brain, onSocial, onClose }: Props) {
     if (e.type === "say") {
       const p = peersRef.current.find((x) => x.id === e.from);
       speak(e.from, p?.name ?? "???", e.text);
+      playSound("message", { volume: 0.5 });
     } else if (e.type === "visit") {
+      if (e.to === me.id) playSound("friend_request");
       playVisit(e.from, e.to, e.lines);
     }
   };
   const handleEventRef = useRef(handleEvent);
   handleEventRef.current = handleEvent;
 
+  // A chime when a bug we haven't seen yet walks in.
+  const seen = useRef(new Set<string>());
+  const onPeers = (list: LobbyPet[]) => {
+    if (list.some((p) => !seen.current.has(p.id))) playSound("friend_online", { volume: 0.6 });
+    list.forEach((p) => seen.current.add(p.id));
+    setPeers(list);
+  };
+
   useEffect(() => {
-    const r = joinLobby(me, setPeers, (e) => handleEventRef.current(e));
+    playSound("modem", { volume: 0.4 });
+    const r = joinLobby(me, onPeers, (e) => handleEventRef.current(e));
     room.current = r;
     setOnline(r.online);
     return () => r.leave();
