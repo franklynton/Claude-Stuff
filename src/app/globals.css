@@ -63,3 +63,42 @@ body {
   flex: 0 0 auto;
   padding: 2px 8px;
 }
+
+.animate-hop {
+  animation: hop 0.5s ease-out;
+}
+@keyframes hop {
+  40% { transform: translate(-50%, -24px); }
+}
+
+.animate-float-up {
+  animation: float-up 1s ease-out forwards;
+}
+@keyframes float-up {
+  to { transform: translateY(-60px); opacity: 0; }
+}
+
+.animate-fly {
+  animation: fly 1.6s ease-in-out infinite alternate;
+}
+.animate-fly-2 {
+  animation: fly 1.2s ease-in-out infinite alternate-reverse;
+}
+@keyframes fly {
+  33% { transform: translate(12px, -10px); }
+  66% { transform: translate(-6px, 8px); }
+  100% { transform: translate(8px, 4px); }
+}
+
+.animate-zzz {
+  animation: zzz 2s ease-in-out infinite;
+}
+@keyframes zzz {
+  50% { transform: translate(8px, -10px); opacity: 0.5; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-idle, .animate-hop, .animate-float-up, .animate-fly, .animate-fly-2, .animate-zzz, .marquee-bar span, .desktop-corrupt {
+    animation: none;
+  }
+}

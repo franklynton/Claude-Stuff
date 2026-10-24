@@ -149,12 +149,16 @@ export function newPet(
   };
 }
 
-// Applies `ms` of real time to the pet's stats.
-export function decay(pet: Pet, ms: number): Pet {
+const SLEEP_REFILL_PER_HOUR = 40;
+
+// Applies `ms` of real time to the pet's stats. While asleep, sleep refills
+// and the other needs drain at half speed.
+export function decay(pet: Pet, ms: number, asleep = false): Pet {
   const hours = (ms / 3_600_000) * TIME_SCALE;
   if (hours <= 0) return pet;
   const next = { ...pet };
-  for (const k of NEEDS) next[k] = clamp(pet[k] - DRAIN_PER_HOUR[k] * hours);
+  for (const k of NEEDS) next[k] = clamp(pet[k] - DRAIN_PER_HOUR[k] * hours * (asleep ? 0.5 : 1));
+  if (asleep) next.sleep = clamp(pet.sleep + SLEEP_REFILL_PER_HOUR * hours);
 
   const unwell = next.hunger < LOW || next.cleanliness < LOW || next.sleep < LOW;
   next.health = clamp(pet.health + (unwell ? -HEALTH_DOWN_PER_HOUR : HEALTH_UP_PER_HOUR) * hours);
@@ -167,33 +171,13 @@ export function decay(pet: Pet, ms: number): Pet {
   return result;
 }
 
-export type CareAction = "feed" | "play" | "cuddle" | "wash" | "nap" | "medicine";
+// Points a care action adds (or removes) for each stat, e.g. { hunger: 30, cleanliness: -5 }.
+export type Effect = Partial<Record<Need | "health", number>>;
 
-export function care(pet: Pet, action: CareAction, now = new Date()): Pet {
+export function care(pet: Pet, effect: Effect, now = new Date()): Pet {
   const p = { ...pet };
-  switch (action) {
-    case "feed":
-      p.hunger = clamp(p.hunger + 30);
-      p.last_fed_at = now.toISOString();
-      break;
-    case "play": // fun, but tiring and messy
-      p.fun = clamp(p.fun + 25);
-      p.sleep = clamp(p.sleep - 5);
-      p.cleanliness = clamp(p.cleanliness - 5);
-      break;
-    case "cuddle":
-      p.love = clamp(p.love + 25);
-      break;
-    case "wash":
-      p.cleanliness = 100;
-      break;
-    case "nap":
-      p.sleep = clamp(p.sleep + 35);
-      break;
-    case "medicine":
-      p.health = clamp(p.health + 25);
-      break;
-  }
+  for (const [k, v] of Object.entries(effect) as [Need | "health", number][]) p[k] = clamp(p[k] + v);
+  if ((effect.hunger ?? 0) > 0) p.last_fed_at = now.toISOString();
   return withMood(p);
 }
 

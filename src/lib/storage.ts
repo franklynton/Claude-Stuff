@@ -1,4 +1,5 @@
 import type { Pet } from "@/types/db";
+import { type Progress, START_PROGRESS } from "./progress";
 
 // Browser save until Supabase auth + the pets table are set up (priority 2).
 const KEY = "millennium-bug:pet";
@@ -24,8 +25,26 @@ export function savePet(pet: Pet): void {
   }
 }
 
+const PROGRESS_KEY = "millennium-bug:progress";
+
+export function loadProgress(): Progress {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    return raw ? { ...START_PROGRESS, ...JSON.parse(raw) } : START_PROGRESS;
+  } catch {
+    return START_PROGRESS;
+  }
+}
+
+export function saveProgress(progress: Progress): void {
+  try {
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
+  } catch {}
+}
+
 export function clearPet(): void {
   try {
     localStorage.removeItem(KEY);
+    localStorage.removeItem(PROGRESS_KEY);
   } catch {}
 }
