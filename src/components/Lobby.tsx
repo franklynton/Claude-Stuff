@@ -7,6 +7,7 @@ import type { Brain } from "@/lib/brain";
 import { type LobbyRoom, joinLobby } from "@/lib/realtime";
 import { makeVisit } from "@/lib/visitChat";
 import { playSound } from "@/lib/sound";
+import { clockTime } from "@/lib/clock";
 import PetSprite from "./PetSprite";
 import Win98Window from "./Win98Window";
 
@@ -33,7 +34,7 @@ export default function Lobby({ pet, brain, onSocial, onClose }: Props) {
   }));
   const [peers, setPeers] = useState<LobbyPet[]>([]);
   const [bubbles, setBubbles] = useState<Record<string, { text: string; until: number }>>({});
-  const [log, setLog] = useState<VisitLine[]>([]);
+  const [log, setLog] = useState<(VisitLine & { at: number })[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [online, setOnline] = useState(false);
@@ -44,7 +45,7 @@ export default function Lobby({ pet, brain, onSocial, onClose }: Props) {
   // Shows a speech bubble over a bug (by its id) and adds the line to the chat log.
   const speak = (id: string, speaker: string, text: string) => {
     setBubbles((b) => ({ ...b, [id]: { text, until: Date.now() + BUBBLE_MS } }));
-    setLog((l) => [...l.slice(-30), { speaker, text }]);
+    setLog((l) => [...l.slice(-30), { speaker, text, at: Date.now() }]);
   };
 
   // Plays a visit conversation line by line, the same way on both owners' screens.
@@ -174,7 +175,7 @@ export default function Lobby({ pet, brain, onSocial, onClose }: Props) {
         {log.length === 0 && <span className="text-gray-500">Lobby chat appears here.</span>}
         {log.map((l, i) => (
           <div key={i}>
-            <b>{l.speaker}:</b> {l.text}
+            <span className="text-gray-500">({clockTime(l.at)})</span> <b>{l.speaker}:</b> {l.text}
           </div>
         ))}
       </div>
