@@ -52,7 +52,7 @@ import Win98Window from "./Win98Window";
 
 const TICK_MS = 1000;
 
-export default function PetHome() {
+export default function PetHome({ username, onLogOff }: { username?: string; onLogOff?: () => void }) {
   const [pet, setPet] = useState<Pet | null>(null);
   const [progress, setProgress] = useState<Progress>(START_PROGRESS);
   const [loaded, setLoaded] = useState(false);
@@ -412,7 +412,17 @@ export default function PetHome() {
         </div>
       )}
 
-      <Taskbar glitch={glitch} />
+      <Taskbar
+        glitch={glitch}
+        username={username}
+        onLogOff={
+          onLogOff &&
+          (() => {
+            stopAllLoops();
+            onLogOff();
+          })
+        }
+      />
     </div>
   );
 }
