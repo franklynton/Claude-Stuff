@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Pet } from "@/types/db";
-import { type CareAction, care, decay, glitchText, newPet, type PersonalityKey } from "@/lib/pet";
+import type { Pet, PixelGrid } from "@/types/db";
+import { type CareAction, care, decay, glitchText, newPet, personalityName } from "@/lib/pet";
 import { clearPet, loadPet, savePet } from "@/lib/storage";
 import HatchForm from "./HatchForm";
 import PetChat from "./PetChat";
@@ -43,7 +43,7 @@ export default function PetHome() {
     if (pet) savePet(pet);
   }, [pet]);
 
-  const hatch = (name: string, personality: PersonalityKey) => setPet(newPet(name, personality));
+  const hatch = (name: string, pixels: PixelGrid) => setPet(newPet(name, pixels));
   const reset = () => {
     if (!confirm("Delete this bug and start again?")) return;
     clearPet();
@@ -67,7 +67,10 @@ export default function PetHome() {
               <div className="flex justify-center bg-[#008080] py-4">
                 <PetSprite pixels={pet.pixel_data} glitch={glitch} />
               </div>
-              <div className="mt-3 flex flex-col gap-1">
+              <p className="mt-2 text-center">
+                Personality: <b className="capitalize">{personalityName(pet)}</b>
+              </p>
+              <div className="mt-2 flex flex-col gap-1">
                 <StatBar label="Hunger" value={pet.hunger} />
                 <StatBar label="Love" value={pet.love} />
                 <StatBar label="Cleanliness" value={pet.cleanliness} />

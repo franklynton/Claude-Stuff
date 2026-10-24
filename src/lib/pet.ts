@@ -32,43 +32,110 @@ export const PERSONALITIES = {
 
 export type PersonalityKey = keyof typeof PERSONALITIES;
 
-// Placeholder 16x16 "millennium bug" until the art team's sprite or the pixel editor exists.
-const PALETTE: Record<string, string> = {
-  ".": "",
-  k: "#000000",
-  g: "#00a800",
-  l: "#5cff5c",
-  w: "#ffffff",
-  r: "#ff0000",
+// Bug shapes the player picks from at hatch, as 16x16 templates:
+// k = outline, w = eye white, g = body, l = body highlight, r = spots, . = empty.
+// TODO: replace with the art team's sprites, and the pixel editor (priority 4).
+const SHAPES = {
+  beetle: [
+    "....k......k....",
+    ".....k....k.....",
+    "......kkkk......",
+    ".....kggggk.....",
+    "....kgwkkwgk....",
+    "....kgwkkwgk....",
+    "...kkggggggkk...",
+    "..k.kgglrggk.k..",
+    "...kggllggggk...",
+    "..k.kggggglgk.k.",
+    "...kgglggggk....",
+    "..k.kgggrggk.k..",
+    "....kgggggk.....",
+    ".....kkkkkk.....",
+    "....k......k....",
+    "................",
+  ],
+  ladybird: [
+    "................",
+    "................",
+    "......kkkk......",
+    ".....kkwwkk.....",
+    "....kkkkkkkk....",
+    "...kgggkkgggk...",
+    "..kgrrgkkgrrgk..",
+    "..kgrrgkkgrrgk..",
+    ".kgggggkkgggggk.",
+    ".kglrggkkggrrgk.",
+    ".kgrrggkkggrrgk.",
+    "..kggggkkggggk..",
+    "...kggrkkrggk...",
+    "....kkkkkkkk....",
+    "...k..k..k..k...",
+    "................",
+  ],
+  caterpillar: [
+    "................",
+    "................",
+    "...........k.k..",
+    "...........k.k..",
+    "..........kkkkk.",
+    ".........kgggggk",
+    ".........kgwgwgk",
+    "..kkk.kkkkgkgkgk",
+    ".kgggkgggkgggggk",
+    "kglrgkglrgkgrrgk",
+    "kggggkggggkgggk.",
+    ".kggk.kggk.kkkk.",
+    "..kk...kk.......",
+    "..k.k..k.k......",
+    "................",
+    "................",
+  ],
 };
-const BUG = [
-  "....k......k....",
-  ".....k....k.....",
-  "......kkkk......",
-  ".....kggggk.....",
-  "....kgwkkwgk....",
-  "....kgwkkwgk....",
-  "...kkggggggkk...",
-  "..k.kgglrggk.k..",
-  "...kggllggggk...",
-  "..k.kggggglgk.k.",
-  "...kgglggggk....",
-  "..k.kgggrggk.k..",
-  "....kgggggk.....",
-  ".....kkkkkk.....",
-  "....k......k....",
-  "................",
-];
-export const DEFAULT_PIXELS: PixelGrid = BUG.map((row) => [...row].map((c) => PALETTE[c] ?? ""));
+export type ShapeKey = keyof typeof SHAPES;
+export const SHAPE_KEYS = Object.keys(SHAPES) as ShapeKey[];
 
-export function newPet(name: string, personality: PersonalityKey, now = new Date()): Pet {
+export const COLOURS = [
+  { name: "Green", body: "#00a800", light: "#5cff5c", spots: "#ff0000" },
+  { name: "Red", body: "#d00000", light: "#ff6060", spots: "#000000" },
+  { name: "Blue", body: "#0040c0", light: "#40a0ff", spots: "#ffff00" },
+  { name: "Purple", body: "#8000a0", light: "#d060ff", spots: "#00ffff" },
+  { name: "Pink", body: "#ff40a0", light: "#ffa0d0", spots: "#ffffff" },
+  { name: "Gold", body: "#c09000", light: "#ffe040", spots: "#804000" },
+];
+
+export function makePixels(shape: ShapeKey, colour: number): PixelGrid {
+  const c = COLOURS[colour] ?? COLOURS[0];
+  const palette: Record<string, string> = { k: "#000000", w: "#ffffff", g: c.body, l: c.light, r: c.spots };
+  return SHAPES[shape].map((row) => [...row].map((ch) => palette[ch] ?? ""));
+}
+
+export const DEFAULT_PIXELS = makePixels("beetle", 0);
+
+// Every bug hatches with a random personality.
+export function randomPersonality(): PersonalityKey {
+  const keys = Object.keys(PERSONALITIES) as PersonalityKey[];
+  return keys[Math.floor(Math.random() * keys.length)];
+}
+
+// The short name ("grumpy") for a pet's stored personality prompt.
+export function personalityName(pet: Pet): string {
+  const entry = Object.entries(PERSONALITIES).find(([, prompt]) => prompt === pet.personality);
+  return entry ? entry[0] : "mystery";
+}
+
+export function newPet(
+  name: string,
+  pixel_data: PixelGrid = DEFAULT_PIXELS,
+  personality = randomPersonality(),
+  now = new Date(),
+): Pet {
   const iso = now.toISOString();
   return {
     id: crypto.randomUUID(),
     owner_id: "local", // replaced by the Supabase user id once auth exists
     name,
     personality: PERSONALITIES[personality],
-    pixel_data: DEFAULT_PIXELS,
+    pixel_data,
     hunger: 80,
     mood: 80,
     love: 80,
