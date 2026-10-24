@@ -7,13 +7,14 @@ interface Props {
   pixels: PixelGrid;
   glitch: number;
   scale?: number;
+  idle?: boolean; // bounce animation
 }
 
 const GLITCH_COLOURS = ["#ff00ff", "#00ffff", "#ffff00", "#000000"];
 
 // Draws the 16x16 pixel grid on a canvas. When glitch_level is high, it redraws
 // every few hundred ms with shifted rows and wrong colours.
-export default function PetSprite({ pixels, glitch, scale = 12 }: Props) {
+export default function PetSprite({ pixels, glitch, scale = 12, idle = true }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
   const size = pixels.length;
 
@@ -48,7 +49,7 @@ export default function PetSprite({ pixels, glitch, scale = 12 }: Props) {
       ref={ref}
       width={size * scale}
       height={size * scale}
-      className="pixelated animate-idle"
+      className={`pixelated ${idle ? "animate-idle" : ""}`}
       aria-label="Your pet"
     />
   );

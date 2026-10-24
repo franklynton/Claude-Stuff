@@ -9,6 +9,7 @@ import ByteCatcher from "./ByteCatcher";
 import HatchForm from "./HatchForm";
 import House from "./House";
 import PetChat from "./PetChat";
+import PixelEditor from "./PixelEditor";
 import Shop from "./Shop";
 import StatBar from "./StatBar";
 import Taskbar from "./Taskbar";
@@ -23,6 +24,7 @@ export default function PetHome() {
   const [asleep, setAsleep] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const [gameOpen, setGameOpen] = useState(false);
+  const [editorOpen, setEditorOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const asleepRef = useRef(asleep);
@@ -90,6 +92,7 @@ export default function PetHome() {
     setConfirmDelete(false);
     setShopOpen(false);
     setGameOpen(false);
+    setEditorOpen(false);
   };
 
   const glitch = pet?.glitch_level ?? 0;
@@ -118,6 +121,9 @@ export default function PetHome() {
                 <span className="flex-1 text-right">
                   <b className="capitalize">{personalityName(pet)}</b>
                 </span>
+                <button className="!min-w-0" onClick={() => setEditorOpen((o) => !o)}>
+                  🎨 Edit look
+                </button>
                 <button className="!min-w-0" onClick={() => setShopOpen((o) => !o)}>
                   🛒 Shop
                 </button>
@@ -153,6 +159,16 @@ export default function PetHome() {
               </section>
             </Win98Window>
             <div className="flex flex-col gap-4">
+              {editorOpen && (
+                <PixelEditor
+                  initial={pet.pixel_data}
+                  onSave={(pixel_data) => {
+                    setPet((p) => (p ? { ...p, pixel_data } : p));
+                    setEditorOpen(false);
+                  }}
+                  onCancel={() => setEditorOpen(false)}
+                />
+              )}
               {gameOpen && (
                 <ByteCatcher
                   pixels={pet.pixel_data}
