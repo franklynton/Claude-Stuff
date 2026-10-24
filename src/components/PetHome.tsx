@@ -355,6 +355,7 @@ export default function PetHome({ username, onLogOff }: { username?: string; onL
                   apply={apply}
                   onPlayGame={() => setGameOpen(true)}
                   onPlaySnake={() => setSnakeOpen(true)}
+                  onNudge={(kind, n) => setProgress((p) => ({ ...p, nudge: { ...p.nudge, [kind]: n ?? undefined } }))}
                 />
                 <section className="field-row mt-2 justify-end">
                   {confirmDelete ? (

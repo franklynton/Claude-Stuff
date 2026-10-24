@@ -8,7 +8,11 @@ export interface Progress {
   hat: string | null;
   glasses: string | null;
   wallpaper: string | null;
+  // How far the player dragged the hat or glasses from where the game put them (px).
+  nudge?: Partial<Record<"hat" | "glasses", Nudge>>;
 }
+
+export type Nudge = { x: number; y: number };
 
 export const START_PROGRESS: Progress = { coins: 50, xp: 0, owned: [], hat: null, glasses: null, wallpaper: null };
 
