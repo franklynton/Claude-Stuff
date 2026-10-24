@@ -25,6 +25,7 @@ import {
   ageUp,
   canAgeUp,
   drift,
+  gainSkill,
   newBrain,
   observe,
   stageOf,
@@ -39,6 +40,7 @@ import {
   saveProgress,
 } from "@/lib/storage";
 import BrainPanel from "./BrainPanel";
+import Lobby from "./Lobby";
 import GrowUpPanel from "./GrowUpPanel";
 import ByteCatcher from "./ByteCatcher";
 import HatchForm from "./HatchForm";
@@ -64,6 +66,7 @@ export default function PetHome({ username, onLogOff }: { username?: string; onL
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [brain, setBrainState] = useState<Brain | null>(null);
   const [brainOpen, setBrainOpen] = useState(false);
+  const [lobbyOpen, setLobbyOpen] = useState(false);
   const asleepRef = useRef(asleep);
   asleepRef.current = asleep;
 
@@ -247,6 +250,7 @@ export default function PetHome({ username, onLogOff }: { username?: string; onL
     setPet(null);
     setBrainState(null);
     setBrainOpen(false);
+    setLobbyOpen(false);
     setConfirmDelete(false);
     setShopOpen(false);
     setGameOpen(false);
@@ -275,7 +279,7 @@ export default function PetHome({ username, onLogOff }: { username?: string; onL
                 title={glitchText(`${pet.name}.exe`, glitch)}
                 className="w-[480px]"
               >
-                <div className="mb-2 flex items-center gap-2">
+                <div className="mb-2 flex flex-wrap items-center gap-2 whitespace-nowrap">
                   <span>
                     <b>Lv {level}</b>
                   </span>
@@ -297,6 +301,12 @@ export default function PetHome({ username, onLogOff }: { username?: string; onL
                       </b>
                     )}
                   </span>
+                  <button
+                    className="!min-w-0"
+                    onClick={() => setLobbyOpen((o) => !o)}
+                  >
+                    🌐 Lobby
+                  </button>
                   <button
                     className="!min-w-0"
                     onClick={() => setBrainOpen((o) => !o)}
@@ -350,6 +360,14 @@ export default function PetHome({ username, onLogOff }: { username?: string; onL
                   )}
                 </section>
               </Win98Window>
+              {brain && lobbyOpen && (
+                <Lobby
+                  pet={pet}
+                  brain={brain}
+                  onSocial={() => setBrain((b) => gainSkill(b, "social", 2))}
+                  onClose={() => setLobbyOpen(false)}
+                />
+              )}
               {brain && (
                 <GrowUpPanel pet={pet} brain={brain} onAgeUp={growUp} />
               )}

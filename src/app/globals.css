@@ -103,6 +103,31 @@ body {
   }
 }
 
+/* Lobby: a Club Penguin-style plaza with a sky and a floor */
+.lobby-room {
+  background: linear-gradient(#87ceeb 0 28%, #ffd27f 28% 30%, #c8a2c8 30%);
+  border: 2px inset #fff;
+}
+.lobby-bug {
+  transition: left 1s linear, top 1s linear;
+}
+.lobby-name {
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0 3px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.lobby-bubble {
+  background: #fff;
+  border: 1px solid #000;
+  border-radius: 8px;
+  padding: 2px 6px;
+  margin-bottom: 2px;
+  max-width: 160px;
+  font-size: 11px;
+  text-align: center;
+}
+
 /* ---------- XP-style login screen (from the login branch) ---------- */
 
 /* 98.css styles every button and input; undo that inside the login screen so it looks like XP, not 98. */
