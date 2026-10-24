@@ -1,5 +1,6 @@
 "use client";
 
+import { playSound } from "@/lib/sound";
 import { useState } from "react";
 import type { PixelGrid } from "@/types/db";
 import { COLOURS, SHAPE_KEYS, type ShapeKey, makePixels } from "@/lib/pet";
@@ -70,6 +71,11 @@ export default function PixelEditor({ initial, onSave, onCancel }: Props) {
     return out;
   };
 
+  // A tick per changed pixel, so dragging over the same colour stays quiet.
+  const tick = (x: number, y: number) => {
+    if (grid[y][x] !== (tool === "eraser" ? "" : colour)) playSound(tool === "eraser" ? "erase" : "pixel", { volume: 0.5 });
+  };
+
   const press = (x: number, y: number) => {
     if (tool === "picker") {
       if (grid[y][x]) setColour(grid[y][x]);
@@ -77,13 +83,16 @@ export default function PixelEditor({ initial, onSave, onCancel }: Props) {
     } else if (tool === "fill") {
       commit(floodFill(grid, x, y, colour));
     } else {
+      tick(x, y);
       commit(paint(grid, x, y));
       setPainting(true);
     }
   };
 
   const enter = (x: number, y: number) => {
-    if (painting) setGrid((g) => paint(g, x, y));
+    if (!painting) return;
+    tick(x, y);
+    setGrid((g) => paint(g, x, y));
   };
 
   const undo = () => {

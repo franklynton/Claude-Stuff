@@ -1,5 +1,6 @@
 "use client";
 
+import { playSound } from "@/lib/sound";
 import { useEffect, useRef, useState } from "react";
 import type { PixelGrid } from "@/types/db";
 import Win98Window from "./Win98Window";
@@ -84,7 +85,10 @@ export default function ByteCatcher({ pixels, onFinish, onClose }: Props) {
       drops = drops.filter((d) => {
         d.y += d.speed * dt;
         const caught = d.y > petTop && d.y < petTop + PET && d.x > petX - 4 && d.x < petX + PET + 4;
-        if (caught) points = Math.max(0, points + (d.bomb ? -3 : 1));
+        if (caught) {
+          points = Math.max(0, points + (d.bomb ? -3 : 1));
+          playSound(d.bomb ? "bomb" : "catch_bit", { volume: 0.6 });
+        }
         return !caught && d.y < H + 10;
       });
 
@@ -109,6 +113,7 @@ export default function ByteCatcher({ pixels, onFinish, onClose }: Props) {
       setTimeLeft(Math.max(0, Math.ceil((end - now) / 1000)));
       if (now >= end) {
         setState("over");
+        playSound("minigame_end");
         onFinish(points);
         return;
       }
@@ -148,6 +153,7 @@ export default function ByteCatcher({ pixels, onFinish, onClose }: Props) {
                 setScore(0);
                 setTimeLeft(GAME_SECONDS);
                 setState("playing");
+                playSound("minigame_start");
               }}
             >
               {state === "over" ? "Play again" : "Start"}
