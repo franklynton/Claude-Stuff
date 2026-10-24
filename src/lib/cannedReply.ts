@@ -1,5 +1,5 @@
 import type { Pet } from "@/types/db";
-import { type Brain, topLikes, traitWords } from "./brain";
+import { type Brain, knownWords, stageOf, topLikes, traitWords } from "./brain";
 
 // Pre-written replies used when no AI is connected. They still use the pet's
 // stats and brain (traits, likes, your name) so it feels like it's learning.
@@ -26,8 +26,25 @@ const TRAIT_LINES: Record<string, string[]> = {
   sarcastic: ["Oh wow, a message. How thrilling.", "Sure, and I'm Clippy."],
 };
 
+// A toddler can barely talk: broken sentences using the words it has learned from you.
+function toddlerReply(pet: Pet, brain: Brain, userText: string): string {
+  const known = knownWords(brain);
+  const heard = (userText.toLowerCase().match(/[a-z][a-z']*/g) ?? []).filter((w) => known.includes(w));
+  const name = brain.ownerName;
+  if (/\bwhat('?s| is) my name\b/i.test(userText)) return name ? `You ${name}! Me know!` : "Me not know! Tell me?";
+  if (pet.hunger < 40) return pick(["Me hungy! Food pwease?", "Tummy go gwowl!"]);
+  if (pet.sleep < 30) return "Me sleepy... *yawn*";
+  const loves = topLikes(brain, 1);
+  if (loves.length && Math.random() < 0.3) return `Me like ${pick(loves)}! More ${pick(loves)}?`;
+  const taught = brain.memories.filter((m) => m.text.startsWith("You taught me: "));
+  if (taught.length && Math.random() < 0.3) return pick(taught).text.replace("You taught me: ", "Me know! ").replace(/\.$/, "!");
+  const word = pick(heard.length ? heard : known.length ? known : ["word"]);
+  return pick([`${word}? What ${word} mean?`, `Me know ${Object.keys(brain.words).length} words!`, `${name ? name + ", " : ""}${word} fun!`, `Say ${word} again! Again!`, "Me bug! Bzzt!"]);
+}
+
 export function cannedReply(pet: Pet, brain: Brain, userText: string): string {
   if (pet.glitch_level > 60) return pick(["ERR0R: d4te = 01/01/1900?? wh3re am i", "*bzzt* fatal exception 0E has occurred at 1999"]);
+  if (stageOf(brain) === 0) return toddlerReply(pet, brain, userText);
   const name = brain.ownerName;
 
   if (/\b(my name is|call me|i'm called)\b/i.test(userText) && name) return `Nice to meet you, ${name}! I'll remember that ^_^`;

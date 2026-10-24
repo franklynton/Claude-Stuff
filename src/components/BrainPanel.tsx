@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Pet } from "@/types/db";
-import { type Brain, TRAITS, selfDescription, topLikes } from "@/lib/brain";
+import { type Brain, TRAITS, knownWords, selfDescription, topLikes } from "@/lib/brain";
 import { askReflect } from "@/lib/askPet";
 import Win98Window from "./Win98Window";
 
@@ -29,6 +29,7 @@ export default function BrainPanel({ pet, brain, setBrain, onClose }: Props) {
   const [thinking, setThinking] = useState(false);
   const loves = topLikes(brain, 1, 5);
   const hates = topLikes(brain, -1, 5);
+  const known = knownWords(brain);
 
   const reflect = async () => {
     setThinking(true);
@@ -48,6 +49,13 @@ export default function BrainPanel({ pet, brain, setBrain, onClose }: Props) {
         <button className="mt-2" onClick={reflect} disabled={thinking}>
           {thinking ? "Thinking..." : "🪞 Reflect (rewrite with AI)"}
         </button>
+      </fieldset>
+
+      <fieldset className="mt-2">
+        <legend>Words it has learned ({known.length})</legend>
+        <p className="sunken-panel !my-0 max-h-16 overflow-y-auto bg-white p-1">
+          {known.length ? known.join(", ") : <span className="text-gray-500">None yet. Say a word twice to teach it.</span>}
+        </p>
       </fieldset>
 
       <fieldset className="mt-2">
