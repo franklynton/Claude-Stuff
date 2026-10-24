@@ -12,7 +12,7 @@ const NEED_LINES: Record<string, string[]> = {
   cleanliness: ["Ew, I smell like an old floppy disk", "Can I have a bath? I'm all dusty"],
   sleep: ["*yawn* I'm so sleepy...", "Brb, going into standby mode zzz"],
   health: ["I don't feel so good... virus.exe?", "Need medicine. Running Norton on myself"],
-  fun: ["I'm bored! Play Byte Catcher with me?", "This is SO boring. Let's prank call someone"],
+  fun: ["I'm bored! Play Coin Catcher with me?", "This is SO boring. Let's prank call someone"],
 };
 
 const TRAIT_LINES: Record<string, string[]> = {

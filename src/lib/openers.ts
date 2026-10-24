@@ -19,7 +19,7 @@ export function opener(pet: Pet, brain: Brain, asleep: boolean): Opener | null {
 
   // Needs come first: a hungry pet asks for food.
   if (pet.hunger < 35) return { text: toddler ? "Me hungy! Food? Pwease?" : `${name ?? "Hey"}, I'm starving! Kitchen? Pleeease?`, question: null };
-  if (pet.fun < 30) return { text: toddler ? "Play! Play ball!" : "I'm sooo bored. Throw the ball or play Byte Catcher with me?", question: null };
+  if (pet.fun < 30) return { text: toddler ? "Play! Play ball!" : "I'm sooo bored. Throw the ball or play Coin Catcher with me?", question: null };
   if (pet.love < 30) return { text: toddler ? "Hug? Me sad..." : "Do you still like me? I could use a pat :(", question: null };
 
   if (!name) say("Who you? What you name?", "Hey, what's your name?", { kind: "name" });

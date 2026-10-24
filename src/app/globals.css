@@ -114,6 +114,30 @@ body {
   transform: translate(1px, 1px);
 }
 
+/* Snake: a Google-style green frame and an arrow-key hint */
+.snake-frame {
+  background: #578a34;
+  padding: 6px;
+}
+.snake-keys {
+  display: grid;
+  grid-template-columns: repeat(3, 22px);
+  gap: 2px;
+  padding: 8px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.45);
+}
+.snake-keys span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  border-radius: 3px;
+  background: #fff;
+  color: #333;
+  font-size: 12px;
+}
+
 /* Lobby: a Club Penguin-style plaza with a sky and a floor */
 .lobby-room {
   background: linear-gradient(#87ceeb 0 28%, #ffd27f 28% 30%, #c8a2c8 30%);
