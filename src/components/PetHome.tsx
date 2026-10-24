@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Pet } from "@/types/db";
-import { decay, feed, glitchText, newPet, play, type PersonalityKey } from "@/lib/pet";
+import { type CareAction, care, decay, glitchText, newPet, type PersonalityKey } from "@/lib/pet";
 import { clearPet, loadPet, savePet } from "@/lib/storage";
 import HatchForm from "./HatchForm";
 import PetChat from "./PetChat";
@@ -12,6 +12,15 @@ import Taskbar from "./Taskbar";
 import Win98Window from "./Win98Window";
 
 const TICK_MS = 1000;
+
+const ACTIONS: { action: CareAction; label: string }[] = [
+  { action: "feed", label: "Feed" },
+  { action: "play", label: "Play" },
+  { action: "cuddle", label: "Cuddle" },
+  { action: "wash", label: "Wash" },
+  { action: "nap", label: "Nap" },
+  { action: "medicine", label: "Medicine" },
+];
 
 export default function PetHome() {
   const [pet, setPet] = useState<Pet | null>(null);
@@ -60,12 +69,22 @@ export default function PetHome() {
               </div>
               <div className="mt-3 flex flex-col gap-1">
                 <StatBar label="Hunger" value={pet.hunger} />
+                <StatBar label="Love" value={pet.love} />
+                <StatBar label="Cleanliness" value={pet.cleanliness} />
+                <StatBar label="Fun" value={pet.fun} />
+                <StatBar label="Sleep" value={pet.sleep} />
+                <StatBar label="Health" value={pet.health} />
                 <StatBar label="Mood" value={pet.mood} />
                 <StatBar label="Glitch" value={pet.glitch_level} danger />
               </div>
-              <section className="field-row mt-3 justify-center">
-                <button onClick={() => setPet((p) => (p ? feed(p) : p))}>Feed</button>
-                <button onClick={() => setPet((p) => (p ? play(p) : p))}>Play</button>
+              <section className="mt-3 grid grid-cols-3 gap-1">
+                {ACTIONS.map(({ action, label }) => (
+                  <button key={action} className="!min-w-0" onClick={() => setPet((p) => (p ? care(p, action) : p))}>
+                    {label}
+                  </button>
+                ))}
+              </section>
+              <section className="field-row mt-2 justify-end">
                 <button onClick={reset}>Delete</button>
               </section>
             </Win98Window>

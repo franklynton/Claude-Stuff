@@ -16,7 +16,12 @@ export interface Pet {
   personality: string;
   pixel_data: PixelGrid;
   hunger: number; // 0-100, 100 = full
-  mood: number; // 0-100, 100 = happy
+  mood: number; // 0-100, average of the needs below
+  love: number; // 0-100
+  cleanliness: number; // 0-100
+  health: number; // 0-100
+  fun: number; // 0-100
+  sleep: number; // 0-100, 100 = fully rested
   glitch_level: number; // 0-100, 100 = fully corrupted
   last_fed_at: string;
   created_at: string;

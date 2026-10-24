@@ -30,6 +30,11 @@ export default function PetChat({ pet }: { pet: Pet }) {
           personality: pet.personality,
           hunger: pet.hunger,
           mood: pet.mood,
+          love: pet.love,
+          cleanliness: pet.cleanliness,
+          health: pet.health,
+          fun: pet.fun,
+          sleep: pet.sleep,
           glitch_level: pet.glitch_level,
           history: history.slice(-8), // keep requests small to save credits
         }),

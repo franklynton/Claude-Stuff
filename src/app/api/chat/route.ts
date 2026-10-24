@@ -9,6 +9,11 @@ interface ChatBody {
   personality: string;
   hunger: number;
   mood: number;
+  love: number;
+  cleanliness: number;
+  health: number;
+  fun: number;
+  sleep: number;
   glitch_level: number;
   history: { from: "you" | "pet"; text: string }[];
 }
@@ -23,8 +28,8 @@ function systemPrompt(b: ChatBody): string {
   return [
     `You are ${b.name}, a virtual pet that is a "millennium bug" who survived the year 2000.`,
     `Personality: ${b.personality}`,
-    `Current stats (0-100): hunger ${Math.round(b.hunger)} (100 = full), mood ${Math.round(b.mood)}, glitch ${Math.round(b.glitch_level)}.`,
-    "Let these stats shape your tone: hungry or sad pets complain, happy ones are playful.",
+    `Current stats (0-100, higher is better): hunger ${Math.round(b.hunger)} (100 = full), love ${Math.round(b.love)}, cleanliness ${Math.round(b.cleanliness)}, health ${Math.round(b.health)}, fun ${Math.round(b.fun)}, sleep ${Math.round(b.sleep)}, mood ${Math.round(b.mood)}. Glitch ${Math.round(b.glitch_level)} (higher is worse).`,
+    "Let these stats shape your tone: complain about whatever is lowest (hungry, lonely, smelly, sick, bored or sleepy); happy pets are playful.",
     b.glitch_level > 60
       ? "You are badly glitched: sometimes scramble words, mention fake error messages or think it's 1900."
       : "",

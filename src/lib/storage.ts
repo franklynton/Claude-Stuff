@@ -6,7 +6,11 @@ const KEY = "millennium-bug:pet";
 export function loadPet(): { pet: Pet; savedAt: number } | null {
   try {
     const raw = localStorage.getItem(KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    const saved = JSON.parse(raw);
+    // Pets saved before the extra stats existed start them at 80.
+    saved.pet = { love: 80, cleanliness: 80, health: 100, fun: 80, sleep: 80, ...saved.pet };
+    return saved;
   } catch {
     return null;
   }

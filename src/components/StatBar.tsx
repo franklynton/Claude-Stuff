@@ -8,7 +8,7 @@ export default function StatBar({ label, value, danger = false }: Props) {
   const bad = danger ? value > 60 : value < 30;
   return (
     <div className="flex items-center gap-2">
-      <span className="w-20">{label}</span>
+      <span className="w-24">{label}</span>
       <div className="sunken-panel h-4 flex-1 bg-white">
         <div
           className={`h-full ${bad ? "bg-[#c00000]" : "bg-[#000080]"}`}
