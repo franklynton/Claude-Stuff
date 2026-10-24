@@ -1,5 +1,6 @@
 "use client";
 
+import { playBlip, playSound, typingDelay } from "@/lib/sound";
 import { useEffect, useRef, useState } from "react";
 import type { Pet } from "@/types/db";
 import { type Brain, learnFromChat, remember } from "@/lib/brain";
@@ -12,6 +13,11 @@ interface Props {
   brain: Brain;
   setBrain: (update: (b: Brain) => Brain) => void;
   asleep: boolean;
+}
+
+// The pet's "voice": a blip per letter of the first part of its reply, pitched by its mood.
+function speakBlips(text: string, pet: Pet) {
+  [...text.slice(0, 24)].forEach((ch, i) => setTimeout(() => playBlip(ch, i, pet), i * typingDelay(pet)));
 }
 
 // How long you can stay quiet before the pet starts talking to you.
@@ -35,6 +41,7 @@ export default function PetChat({ pet, brain, setBrain, asleep }: Props) {
       if (!o) return setLines((l) => [...l]); // nothing to say; re-arm the timer
       question.current = o.question;
       setLines((l) => [...l, { from: "pet", text: o.text }]);
+      playSound("attention");
     }, wait);
     return () => clearTimeout(id);
   }, [lines]);
@@ -50,9 +57,11 @@ export default function PetChat({ pet, brain, setBrain, asleep }: Props) {
     setLines(history);
     setDraft("");
     setSending(true);
+    playSound("message");
     try {
       const { reply, memory } = await askChat(pet, learned, history);
       setLines((l) => [...l, { from: "pet", text: reply }]);
+      speakBlips(reply, pet);
       if (memory) setBrain((b) => remember(b, memory));
     } catch {
       setLines((l) => [...l, { from: "pet", text: "ERROR 404: brain not found" }]);

@@ -1,5 +1,5 @@
-import PetHome from "@/components/PetHome";
+import LogOn from "@/components/LogOn";
 
 export default function Home() {
-  return <PetHome />;
+  return <LogOn />;
 }

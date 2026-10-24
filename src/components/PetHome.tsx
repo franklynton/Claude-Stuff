@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  playSound,
+  startLoop,
+  stopAllLoops,
+  stopLoop,
+  unlockAudio,
+} from "@/lib/sound";
 import { useEffect, useRef, useState } from "react";
 import type { Pet, PixelGrid } from "@/types/db";
 import { type Effect, care, decay, glitchText, newPet } from "@/lib/pet";
@@ -47,7 +54,7 @@ import Win98Window from "./Win98Window";
 
 const TICK_MS = 1000;
 
-export default function PetHome() {
+export default function PetHome({ username, onLogOff }: { username?: string; onLogOff?: () => void }) {
   const [pet, setPet] = useState<Pet | null>(null);
   const [progress, setProgress] = useState<Progress>(START_PROGRESS);
   const [loaded, setLoaded] = useState(false);
@@ -95,6 +102,68 @@ export default function PetHome() {
     if (brain) saveBrain(brain);
   }, [brain]);
 
+  // Browsers block audio until the first click, so the boot chime plays then.
+  useEffect(() => {
+    const boot = () => {
+      unlockAudio().then(() => playSound("boot"));
+      window.removeEventListener("pointerdown", boot);
+    };
+    window.addEventListener("pointerdown", boot);
+    return () => window.removeEventListener("pointerdown", boot);
+  }, []);
+
+  // Warning sounds when a stat crosses a line (not on every tick).
+  const prevPet = useRef<Pet | null>(null);
+  useEffect(() => {
+    const before = prevPet.current;
+    prevPet.current = pet;
+    if (!pet || !before || before.id !== pet.id) return;
+    const crossedDown = (k: keyof Pet, line: number) =>
+      (before[k] as number) >= line && (pet[k] as number) < line;
+    const crossedUp = (line: number) =>
+      before.glitch_level < line && pet.glitch_level >= line;
+    if (crossedUp(100)) playSound("y2k_crash");
+    else if (crossedUp(70)) playSound("error");
+    else if (crossedUp(60)) playSound("glitch_big");
+    else if (crossedUp(40)) playSound("glitch_small");
+    else if (crossedDown("hunger", 30)) playSound("hungry_grumble");
+    else if (
+      crossedDown("health", 30) ||
+      crossedDown("sleep", 30) ||
+      crossedDown("cleanliness", 30)
+    )
+      playSound("warning");
+    else if (crossedDown("love", 30) || crossedDown("mood", 30))
+      playSound("sad");
+    else if (before.cleanliness < 100 && pet.cleanliness >= 100)
+      playSound("clean");
+  }, [pet]);
+
+  // Snoring while the lamp is off.
+  const wasAsleep = useRef(false);
+  useEffect(() => {
+    if (asleep) {
+      playSound("sleep");
+      startLoop("sleep_loop", 0.5);
+    } else if (wasAsleep.current) {
+      stopLoop("sleep_loop");
+      playSound("wake");
+    }
+    wasAsleep.current = asleep;
+  }, [asleep]);
+
+  // A chime when the brain records a new skill level.
+  const memCount = useRef(0);
+  useEffect(() => {
+    const mems = brain?.memories ?? [];
+    if (
+      mems.length > memCount.current &&
+      mems.at(-1)?.text.includes("skill went up")
+    )
+      playSound("skill_up");
+    memCount.current = mems.length;
+  }, [brain?.memories]);
+
   // Each tick, the brain notices neglect (and slowly forgets old habits).
   useEffect(() => {
     if (pet) setBrainState((b) => (b ? drift(b, pet) : b));
@@ -120,8 +189,10 @@ export default function PetHome() {
     setProgress((p) => {
       const before = levelOf(p.xp);
       const after = levelOf(p.xp + xp);
-      if (after > before)
+      if (after > before) {
         showToast(`LEVEL UP! You're now level ${after}. New items unlocked!`);
+        playSound("level_up");
+      }
       return { ...p, coins: p.coins + coins, xp: p.xp + xp };
     });
   };
@@ -140,7 +211,8 @@ export default function PetHome() {
 
   const buy = (id: string) => {
     const item = SHOP.find((i) => i.id === id);
-    if (!item || progress.coins < item.price) return;
+    if (!item || progress.coins < item.price) return playSound("denied");
+    playSound("purchase");
     setProgress((p) => ({
       ...p,
       coins: p.coins - item.price,
@@ -150,11 +222,15 @@ export default function PetHome() {
   };
   const wear = (kind: ShopKind, id: string | null) => {
     setProgress((p) => ({ ...p, [kind]: id }));
-    if (id) learn({ type: "dressup" });
+    if (id) {
+      learn({ type: "dressup" });
+      playSound("equip");
+    }
   };
   const growUp = () => {
     if (!brain || !canAgeUp(brain)) return;
     setBrainState(ageUp(brain));
+    playSound("birthday");
     showToast(
       `${pet?.name} grew into a ${STAGES[brain.stage + 1].name}! It can talk better now.`,
     );
@@ -165,8 +241,11 @@ export default function PetHome() {
     setPet(born);
     setBrainState(newBrain());
     setProgress(START_PROGRESS);
+    playSound("hatch");
   };
   const reset = () => {
+    playSound("trash");
+    stopAllLoops();
     clearPet();
     setPet(null);
     setBrainState(null);
@@ -300,6 +379,7 @@ export default function PetHome() {
                   onSave={(pixel_data) => {
                     setPet((p) => (p ? { ...p, pixel_data } : p));
                     learn({ type: "redraw" });
+                    playSound("equip");
                     setEditorOpen(false);
                   }}
                   onCancel={() => setEditorOpen(false)}
@@ -310,6 +390,7 @@ export default function PetHome() {
                   pixels={pet.pixel_data}
                   onFinish={(score) => {
                     reward(score, score * 2);
+                    if (score > 0) setTimeout(() => playSound("coin"), 900);
                     learn({ type: "game", score });
                     setPet((p) => (p ? care(p, { fun: 20, sleep: -5 }) : p));
                   }}
@@ -349,7 +430,17 @@ export default function PetHome() {
         </div>
       )}
 
-      <Taskbar glitch={glitch} />
+      <Taskbar
+        glitch={glitch}
+        username={username}
+        onLogOff={
+          onLogOff &&
+          (() => {
+            stopAllLoops();
+            onLogOff();
+          })
+        }
+      />
     </div>
   );
 }

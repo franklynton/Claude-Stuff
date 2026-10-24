@@ -1,11 +1,14 @@
 "use client";
 
+import { setMuted } from "@/lib/sound";
 import { useEffect, useState } from "react";
 
 // Bottom taskbar with a clock. Once the pet is glitchy enough, the date "rolls
 // over" to 1900, the Y2K bug the pet is named after.
-export default function Taskbar({ glitch }: { glitch: number }) {
+export default function Taskbar({ glitch, username, onLogOff }: { glitch: number; username?: string; onLogOff?: () => void }) {
   const [now, setNow] = useState<Date | null>(null);
+  const [muted, setMute] = useState(false);
+  const [startOpen, setStartOpen] = useState(false);
 
   useEffect(() => {
     setNow(new Date());
@@ -18,8 +21,32 @@ export default function Taskbar({ glitch }: { glitch: number }) {
   const time = now ? now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : "";
 
   return (
-    <footer className="taskbar">
-      <button className="font-bold">Start</button>
+    <footer className="taskbar relative">
+      <button className="font-bold" onClick={() => setStartOpen(!startOpen)}>
+        Start
+      </button>
+      {startOpen && onLogOff && (
+        <div className="window absolute bottom-full left-0 z-50 w-48">
+          <div className="title-bar">
+            <div className="title-bar-text">{username}</div>
+          </div>
+          <div className="window-body">
+            <button className="w-full" onClick={onLogOff}>
+              🔑 Log Off {username}...
+            </button>
+          </div>
+        </div>
+      )}
+      <button
+        className="ml-auto mr-1 !min-w-0"
+        title={muted ? "Sound off" : "Sound on"}
+        onClick={() => {
+          setMuted(!muted);
+          setMute(!muted);
+        }}
+      >
+        {muted ? "🔇" : "🔊"}
+      </button>
       <div className="status-bar-field taskbar-clock">
         {time} {date}
       </div>
