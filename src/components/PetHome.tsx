@@ -55,7 +55,7 @@ import Win98Window from "./Win98Window";
 
 const TICK_MS = 1000;
 
-export default function PetHome({ username, onLogOff }: { username?: string; onLogOff?: () => void }) {
+export default function PetHome({ userId, username, onLogOff }: { userId?: string; username?: string; onLogOff?: () => void }) {
   const [pet, setPet] = useState<Pet | null>(null);
   const [progress, setProgress] = useState<Progress>(START_PROGRESS);
   const [loaded, setLoaded] = useState(false);
@@ -377,6 +377,7 @@ export default function PetHome({ username, onLogOff }: { username?: string; onL
                 <Lobby
                   pet={pet}
                   brain={brain}
+                  userId={userId ?? "guest"}
                   onSocial={() => setBrain((b) => gainSkill(b, "social", 2))}
                   onClose={() => setLobbyOpen(false)}
                 />

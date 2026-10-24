@@ -143,8 +143,10 @@ body {
   background: linear-gradient(#87ceeb 0 28%, #ffd27f 28% 30%, #c8a2c8 30%);
   border: 2px inset #fff;
 }
+/* Each walk's duration is set per bug (distance / speed) so every screen agrees. */
 .lobby-bug {
-  transition: left 1s linear, top 1s linear;
+  transition-property: left, top;
+  transition-timing-function: linear;
 }
 .lobby-name {
   background: rgba(255, 255, 255, 0.8);
