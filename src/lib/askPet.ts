@@ -6,11 +6,17 @@ import type { Brain } from "./brain";
 
 export type ChatTurn = { from: "you" | "pet"; text: string };
 
-export async function askChat(pet: Pet, brain: Brain, history: ChatTurn[]): Promise<{ reply: string; memory?: string }> {
+export async function askChat(
+  pet: Pet,
+  brain: Brain,
+  history: ChatTurn[],
+  signal?: AbortSignal, // cancels the request (signing out mid-reply)
+): Promise<{ reply: string; memory?: string }> {
   const res = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ pet, brain, history: history.slice(-8) }), // keep requests small to save credits
+    signal,
   });
   return res.json();
 }

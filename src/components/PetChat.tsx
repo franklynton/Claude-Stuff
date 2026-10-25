@@ -7,7 +7,7 @@ import { type Brain, learnFromChat, remember } from "@/lib/brain";
 import { type ChatTurn, askChat } from "@/lib/askPet";
 import { type Question, learnAnswer, opener } from "@/lib/openers";
 import { clockTime } from "@/lib/clock";
-import { canSpeak, setVoiceOn, speak, voiceOn } from "@/lib/voice";
+import { canSpeak, setVoiceOn, speak, stopSpeaking, voiceOn } from "@/lib/voice";
 import Win98Window from "./Win98Window";
 import { useAutoScroll } from "@/lib/useAutoScroll";
 
@@ -19,8 +19,11 @@ interface Props {
 }
 
 // The pet's "voice": a blip per letter of the first part of its reply, pitched by its mood.
-function speakBlips(text: string, pet: Pet) {
-  [...text.slice(0, 24)].forEach((ch, i) => setTimeout(() => playBlip(ch, i, pet), i * typingDelay(pet)));
+// Stops part-way if `signal` is aborted (signing out mid-reply).
+function speakBlips(text: string, pet: Pet, signal?: AbortSignal) {
+  [...text.slice(0, 24)].forEach((ch, i) =>
+    setTimeout(() => !signal?.aborted && playBlip(ch, i, pet), i * typingDelay(pet)),
+  );
 }
 
 // A chat line plus when it was sent (the time stays out of what's sent to the AI).
@@ -45,6 +48,18 @@ export default function PetChat({ pet, brain, setBrain, asleep }: Props) {
   // Latest props for the idle timer, so it doesn't restart on every stat tick.
   const latest = useRef({ pet, brain, asleep, sending, voice });
   latest.current = { pet, brain, asleep, sending, voice };
+
+  // Signing out unmounts the chat, and that stops the pet mid-thought: a reply
+  // it's still waiting for is cancelled, and nothing more is typed or read out.
+  const thinking = useRef<AbortController>(null);
+  useEffect(() => {
+    const stop = new AbortController();
+    thinking.current = stop;
+    return () => {
+      stop.abort();
+      stopSpeaking();
+    };
+  }, []);
 
   // After a quiet spell, the pet says something (often a question) on its own.
   useEffect(() => {
@@ -73,12 +88,13 @@ export default function PetChat({ pet, brain, setBrain, asleep }: Props) {
     setDraft("");
     setSending(true);
     playSound("message");
+    const signal = thinking.current?.signal;
     try {
-      const { reply, memory } = await askChat(pet, learned, history.map(({ from, text }) => ({ from, text })));
+      const { reply, memory } = await askChat(pet, learned, history.map(({ from, text }) => ({ from, text })), signal);
       setLines((l) => [...l, { from: "pet", text: reply, at: Date.now() }]);
       // Out loud if voice is on, otherwise the old beep-per-letter voice.
       if (voice) speak(reply, pet, learned.stage);
-      else speakBlips(reply, pet);
+      else speakBlips(reply, pet, signal);
       if (memory) setBrain((b) => remember(b, memory));
     } catch {
       setLines((l) => [...l, { from: "pet", text: "ERROR 404: brain not found", at: Date.now() }]);

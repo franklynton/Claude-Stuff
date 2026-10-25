@@ -31,17 +31,21 @@ import {
   stageOf,
 } from "@/lib/brain";
 import {
+  clearPause,
   clearPet,
   loadBrain,
+  loadPause,
   loadPet,
   loadHideHelp,
   loadProgress,
   saveBrain,
+  savePause,
   savePet,
   saveProgress,
 } from "@/lib/storage";
 import BrainPanel from "./BrainPanel";
 import Lobby from "./Lobby";
+import PowerMenu from "./PowerMenu";
 import GrowUpPanel from "./GrowUpPanel";
 import CoinCatcher from "./CoinCatcher";
 import Snake from "./Snake";
@@ -75,14 +79,22 @@ export default function PetHome({ userId, username, onLogOff }: { userId?: strin
   const asleepRef = useRef(asleep);
   asleepRef.current = asleep;
 
-  // Load after mount (localStorage isn't available during server rendering),
-  // catching up on the time the tab was closed.
+  // Load after mount (localStorage isn't available during server rendering).
+  // A pet you signed out of was paused, so it carries on exactly where it was
+  // (asleep too, if it was); if the tab was just closed, it catches up on that time.
   useEffect(() => {
     const saved = loadPet();
+    const pause = loadPause();
     if (saved) {
-      setPet(decay(saved.pet, Date.now() - saved.savedAt));
+      const restored = pause ? saved.pet : decay(saved.pet, Date.now() - saved.savedAt);
+      setPet(restored);
       setBrainState({ ...newBrain(), ...loadBrain() }); // fills in fields older saves lack
+      if (pause) {
+        setAsleep(pause.asleep);
+        savePet(restored); // restart the save clock before the pause goes, in case another tab loads it too
+      }
     }
+    clearPause();
     setProgress(loadProgress());
     setHelpOpen(!loadHideHelp()); // the How to play window, right after logging in
     setLoaded(true);
@@ -264,6 +276,21 @@ export default function PetHome({ userId, username, onLogOff }: { userId?: strin
     setEditorOpen(false);
   };
 
+  // Saves everything as it is right now and pauses the pet, so the time until the
+  // next sign-in doesn't count (see the load above). Logging off then unmounts all
+  // of this, which takes the pet out of the lobby and stops its brain and chat.
+  const signOut = () => {
+    if (pet) {
+      savePet(pet);
+      savePause({ asleep });
+    }
+    if (brain) saveBrain(brain);
+    if (loaded) saveProgress(progress);
+    stopAllLoops();
+    playSound("window_close");
+    onLogOff?.();
+  };
+
   // Both minigames pay out the same way: a coin per point, XP, and a fun boost.
   const finishGame = (name: string) => (score: number) => {
     reward(score, score * 2);
@@ -277,11 +304,14 @@ export default function PetHome({ userId, username, onLogOff }: { userId?: strin
 
   return (
     <div className={`desktop ${glitch > 70 ? "desktop-corrupt" : ""}`}>
-      <div className="marquee-bar">
-        <span>
-          ★ Welcome to MiLLeNNiuM BuG ★ Best viewed in Netscape Navigator 4.0 at
-          800x600 ★ Under construction ★
-        </span>
+      <div className="flex items-center bg-[#000080]">
+        <div className="marquee-bar min-w-0 flex-1">
+          <span>
+            ★ Welcome to MiLLeNNiuM BuG ★ Best viewed in Netscape Navigator 4.0 at
+            800x600 ★ Under construction ★
+          </span>
+        </div>
+        {onLogOff && <PowerMenu username={username} petName={pet?.name} onSignOut={signOut} />}
       </div>
 
       <main className="flex flex-1 flex-wrap items-start justify-center gap-6 p-6">
@@ -442,18 +472,7 @@ export default function PetHome({ userId, username, onLogOff }: { userId?: strin
 
       {helpOpen && <HowToPlay onClose={() => setHelpOpen(false)} />}
 
-      <Taskbar
-        glitch={glitch}
-        username={username}
-        onHelp={() => setHelpOpen(true)}
-        onLogOff={
-          onLogOff &&
-          (() => {
-            stopAllLoops();
-            onLogOff();
-          })
-        }
-      />
+      <Taskbar glitch={glitch} username={username} onHelp={() => setHelpOpen(true)} onLogOff={onLogOff && signOut} />
     </div>
   );
 }
