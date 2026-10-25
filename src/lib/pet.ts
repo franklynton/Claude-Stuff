@@ -6,7 +6,7 @@ export const TIME_SCALE = 20;
 // Needs the player tops up with care actions, and how many points each loses per hour.
 export const NEEDS = ["hunger", "love", "cleanliness", "fun", "sleep"] as const;
 export type Need = (typeof NEEDS)[number];
-const DRAIN_PER_HOUR: Record<Need, number> = { hunger: 10, love: 6, cleanliness: 7, fun: 12, sleep: 8 };
+const DRAIN_PER_HOUR: Record<Need, number> = { hunger: 10, love: 6, cleanliness: 7, fun: 12, sleep: 4 };
 
 // Health falls while hunger, cleanliness or sleep is low, and slowly recovers otherwise.
 const HEALTH_DOWN_PER_HOUR = 10;
