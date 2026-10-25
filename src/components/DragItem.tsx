@@ -31,6 +31,9 @@ export default function DragItem({ icon, label, sublabel, disabled, targetRef, o
         disabled={disabled}
         title={label}
         onPointerDown={(e) => {
+          // Browsers still send pointer events to disabled buttons, so locked items
+          // have to refuse the drag here.
+          if (disabled) return;
           e.currentTarget.setPointerCapture(e.pointerId);
           setPos({ x: e.clientX, y: e.clientY });
         }}
