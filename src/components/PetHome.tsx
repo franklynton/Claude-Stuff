@@ -413,6 +413,7 @@ export default function PetHome({ userId, username, onLogOff }: { userId?: strin
                   brain={brain}
                   userId={userId ?? "guest"}
                   onSocial={() => setBrain((b) => gainSkill(b, "social", 2))}
+                  onPong={finishGame("Pong")}
                   onClose={() => setLobbyOpen(false)}
                 />
               )}
