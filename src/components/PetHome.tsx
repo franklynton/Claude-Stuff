@@ -28,6 +28,7 @@ import {
   gainSkill,
   newBrain,
   observe,
+  actionLine,
   stageOf,
 } from "@/lib/brain";
 import {
@@ -188,8 +189,12 @@ export default function PetHome({ userId, username, onLogOff }: { userId?: strin
   }, [pet]);
 
   // The brain learns from what the player does to the pet.
-  const learn = (event: BrainEvent) =>
+  const [action, setAction] = useState<{ id: number; text: string } | null>(null);
+  const learn = (event: BrainEvent) => {
     setBrainState((b) => (b && pet ? observe(b, event, pet) : b));
+    const text = actionLine(event);
+    if (text) setAction((a) => ({ id: (a?.id ?? 0) + 1, text })); // the chat reacts to it
+  };
   const setBrain = (update: (b: Brain) => Brain) =>
     setBrainState((b) => (b ? update(b) : b));
   const setSleeping = (on: boolean) => {
@@ -454,7 +459,7 @@ export default function PetHome({ userId, username, onLogOff }: { userId?: strin
                   onClose={() => setBrainOpen(false)}
                 />
               )}
-              {brain && <PetChat pet={pet} brain={brain} setBrain={setBrain} asleep={asleep} />}
+              {brain && <PetChat pet={pet} brain={brain} setBrain={setBrain} asleep={asleep} action={action} />}
             </div>
           </>
         )}

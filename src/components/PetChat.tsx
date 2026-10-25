@@ -16,6 +16,7 @@ interface Props {
   brain: Brain;
   setBrain: (update: (b: Brain) => Brain) => void;
   asleep: boolean;
+  action: { id: number; text: string } | null; // the last thing you did to it, e.g. "*pats you*"
 }
 
 // The pet's "voice": a blip per letter of the first part of its reply, pitched by its mood.
@@ -31,8 +32,12 @@ type Line = ChatTurn & { at: number };
 
 // How long you can stay quiet before the pet starts talking to you.
 const QUIET_MS = [20_000, 40_000];
+// It waits for you to finish (a burst of pats is one reaction) and reacts at most this
+// often, to stay well inside the AI rate limit.
+const SETTLE_MS = 1500;
+const REACT_GAP_MS = 8000;
 
-export default function PetChat({ pet, brain, setBrain, asleep }: Props) {
+export default function PetChat({ pet, brain, setBrain, asleep, action }: Props) {
   const [lines, setLines] = useState<Line[]>([]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
@@ -46,8 +51,8 @@ export default function PetChat({ pet, brain, setBrain, asleep }: Props) {
     setVoice(canSpeak() && voiceOn());
   }, []);
   // Latest props for the idle timer, so it doesn't restart on every stat tick.
-  const latest = useRef({ pet, brain, asleep, sending, voice });
-  latest.current = { pet, brain, asleep, sending, voice };
+  const latest = useRef({ pet, brain, asleep, sending, voice, lines });
+  latest.current = { pet, brain, asleep, sending, voice, lines };
 
   // Signing out unmounts the chat, and that stops the pet mid-thought: a reply
   // it's still waiting for is cancelled, and nothing more is typed or read out.
@@ -76,32 +81,72 @@ export default function PetChat({ pet, brain, setBrain, asleep }: Props) {
     return () => clearTimeout(id);
   }, [lines]);
 
-  const send = async () => {
-    const text = draft.trim();
-    if (!text || sending) return;
-    const history = [...lines, { from: "you" as const, text, at: Date.now() }];
-    // Learn from the message first (name, likes, kind or mean words) so the reply can use it.
-    const learned = learnAnswer(learnFromChat(brain, text), question.current, text);
-    question.current = null;
-    setBrain(() => learned);
-    setLines(history);
-    setDraft("");
+  // Messages and actions not answered yet. The pet waits until you pause, then
+  // answers them all in one reply (one AI call), so you can send several in a row.
+  const unanswered = useRef(0);
+  const answerTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const answerSoon = (wait = SETTLE_MS) => {
+    clearTimeout(answerTimer.current);
+    answerTimer.current = setTimeout(answer, wait);
+  };
+  useEffect(() => () => clearTimeout(answerTimer.current), []);
+
+  const answer = async () => {
+    const { pet: p, brain: b, sending: busy, voice: talk, lines: history } = latest.current;
+    if (!unanswered.current) return;
+    if (busy) return answerSoon(); // after the reply in progress
+    unanswered.current = 0;
     setSending(true);
-    playSound("message");
     const signal = thinking.current?.signal;
     try {
-      const { reply, memory } = await askChat(pet, learned, history.map(({ from, text }) => ({ from, text })), signal);
+      const { reply, memory } = await askChat(p, b, history.map(({ from, text }) => ({ from, text })), signal);
+      if (signal?.aborted) return;
       setLines((l) => [...l, { from: "pet", text: reply, at: Date.now() }]);
       // Out loud if voice is on, otherwise the old beep-per-letter voice.
-      if (voice) speak(reply, pet, learned.stage);
-      else speakBlips(reply, pet, signal);
-      if (memory) setBrain((b) => remember(b, memory));
+      if (talk) speak(reply, p, b.stage);
+      else speakBlips(reply, p, signal);
+      if (memory) setBrain((x) => remember(x, memory));
     } catch {
       setLines((l) => [...l, { from: "pet", text: "ERROR 404: brain not found", at: Date.now() }]);
     } finally {
       setSending(false);
+      if (unanswered.current) answerSoon(); // you kept typing while it thought
     }
   };
+
+  const send = () => {
+    const text = draft.trim();
+    if (!text) return;
+    // Learn from the message first (name, likes, kind or mean words) so the reply can use it.
+    const learned = learnAnswer(learnFromChat(brain, text), question.current, text);
+    question.current = null;
+    setBrain(() => learned);
+    setLines((l) => [...l, { from: "you", text, at: Date.now() }]);
+    setDraft("");
+    playSound("message");
+    unanswered.current++;
+    answerSoon();
+  };
+
+  // What you do to it (feed, pat, wash, play) goes into the chat as an *action* line,
+  // and the AI reacts using what the brain knows: what it asked for, loves and hates.
+  // Actions are collected for a moment and spaced out to save AI calls.
+  const pending = useRef<string[]>([]);
+  const lastReaction = useRef(0);
+  useEffect(() => {
+    if (!action) return;
+    if (!pending.current.includes(action.text)) pending.current.push(action.text);
+    const timer = setTimeout(() => {
+      if (latest.current.asleep || !pending.current.length) return void (pending.current = []);
+      setLines((l) => [...l, { from: "you", text: pending.current.join(" "), at: Date.now() }]);
+      pending.current = [];
+      lastReaction.current = Date.now();
+      unanswered.current++;
+      answerSoon(100); // after the line above is in `latest`
+    }, Math.max(SETTLE_MS, lastReaction.current + REACT_GAP_MS - Date.now()));
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only a new action restarts the wait
+  }, [action]);
 
   return (
     <Win98Window title={`Chat with ${pet.name} - AIM`} className="w-[360px]">
@@ -126,7 +171,7 @@ export default function PetChat({ pet, brain, setBrain, asleep }: Props) {
         }}
       >
         <input type="text" className="flex-1" value={draft} maxLength={200} onChange={(e) => setDraft(e.target.value)} />
-        <button type="submit" disabled={sending || !draft.trim()}>
+        <button type="submit" disabled={!draft.trim()}>
           Send
         </button>
         {canTalk && (
