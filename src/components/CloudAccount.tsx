@@ -21,7 +21,7 @@ export default function CloudAccount({ onLocal }: { onLocal: () => void }) {
     const db = accountClient();
     const { data: { subscription } } = db.auth.onAuthStateChange((_event, session) => {
       seenEvent = true;
-      if (active) setUser(old => old?.id === session?.user?.id ? old : session?.user ?? null);
+      if (active) setUser(old => old !== undefined && old?.id === session?.user?.id ? old : session?.user ?? null);
     });
     void db.auth.getSession().then(({ data, error }) => {
       if (!active || seenEvent) return;
