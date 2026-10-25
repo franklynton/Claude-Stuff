@@ -55,6 +55,7 @@ export default function House({ pet, progress, asleep, setAsleep, apply, onPlayG
   };
 
   const giveItem = (item: Item, icon: string, event: BrainEvent) => {
+    if (level < item.level) return playSound("denied");
     if (!apply(item.effect, { cost: item.price, xp: 3, event })) {
       playSound("denied");
       setNotice(`Not enough coins for ${item.name}. Play Coin Catcher in the Playroom to earn more!`);

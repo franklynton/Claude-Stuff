@@ -14,8 +14,8 @@ const HEALTH_UP_PER_HOUR = 3;
 // Glitch builds while the pet is neglected and slowly heals while it's cared for.
 const GLITCH_UP_PER_HOUR = 25;
 const GLITCH_DOWN_PER_HOUR = 10;
-// When every need is well looked after, the glitch heals much faster.
-const GLITCH_DOWN_CARED_PER_HOUR = 40;
+// When every need is well looked after, the glitch heals 1 point per real second.
+const GLITCH_DOWN_CARED_PER_HOUR = 3600 / TIME_SCALE;
 const LOW = 30;
 const GOOD = 60;
 
