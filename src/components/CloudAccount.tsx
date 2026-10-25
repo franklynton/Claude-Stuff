@@ -53,13 +53,13 @@ function AccountForm({ onLocal }: { onLocal: () => void }) {
     } catch (e) { setNotice(message(e)); } finally { setBusy(false); }
   };
   return <div className='xp-screen flex min-h-screen flex-col'><header className='xp-top' /><main className='xp-middle flex flex-1 items-center justify-center p-8'><form onSubmit={submit} className='flex w-80 flex-col gap-3 text-white'>
-    <h1 className='text-2xl'>Millennium Bug accounts</h1><p>Your pet follows you across devices.</p>
+    <h1 className='text-lg font-bold'>Cloud sign in</h1><p>Your pet follows you across devices.</p>
     {creating && <><label>User name<input className='xp-input block w-full' value={username} maxLength={20} required onChange={e => setUsername(e.target.value)} /></label><label>Avatar<select className='xp-input block w-full' value={avatar} onChange={e => setAvatar(e.target.value as AvatarId)}>{['bug','floppy','cd','alien','pager','globe'].map(a => <option key={a}>{a}</option>)}</select></label></>}
     <label>Email<input className='xp-input block w-full' type='email' autoComplete='email' required value={email} onChange={e => setEmail(e.target.value)} /></label>
     <label>Password<input className='xp-input block w-full' type='password' autoComplete={creating ? 'new-password' : 'current-password'} minLength={6} required value={password} onChange={e => setPassword(e.target.value)} /></label>
     <button disabled={busy} type='submit'>{busy ? 'Please wait...' : creating ? 'Create cloud account' : 'Sign in'}</button>
     <button disabled={busy} type='button' onClick={() => { setCreating(!creating); setNotice(''); }}>{creating ? 'Already registered? Sign in' : 'Create an account'}</button>
-    <button disabled={busy} type='button' onClick={onLocal}>Local demo / existing local pets (not synced)</button>
+    <button disabled={busy} type='button' onClick={onLocal}>Back to name login (saves in this browser)</button>
     <p role='status'>{notice}</p></form></main><footer className='xp-bottom p-4'>Use the same email and password on your other device.</footer></div>;
 }
 
