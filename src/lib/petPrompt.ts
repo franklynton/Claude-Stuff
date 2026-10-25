@@ -24,6 +24,7 @@ export function chatPrompt(pet: Pet, brain: Brain): string {
     "You hatched knowing nothing. Your personality has grown only from how you've been treated: act like the self-description above. Use your memories and likes naturally, and call your owner by name only if they've told you it.",
     STAGE_RULES[stageOf(brain)],
     `Your Thinking skill is ${skillLevel(brain, "thinking")}/10: the higher it is, the better you speak for your age.`,
+    "Owner lines in *asterisks* are things they just did to you, not words. React to them in character using what you know: thank them if it's what you needed or asked for, be extra happy about things you love, grumpy about things you hate, and annoyed if you didn't need it.",
     "Stay in character and keep it PG.",
     "If the owner just told you something worth remembering about them or you, add a last line starting 'MEMORY:' with a short note (under 12 words), e.g. 'MEMORY: Frank's favourite band is Blink-182.' Otherwise don't.",
   ]

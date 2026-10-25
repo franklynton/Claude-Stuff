@@ -162,9 +162,25 @@ export type BrainEvent =
   | { type: "redraw" }
   | { type: "dressup" };
 
+// The need each kind of care meets, so the pet can tell when you helped it in a bad moment.
+const MEETS: Partial<Record<BrainEvent["type"], (typeof NEEDS)[number]>> = {
+  fed: "hunger", pat: "love", scrub: "cleanliness", ball: "fun", game: "fun",
+};
+
 // Learns from something you did to it. `pet` is its state just before.
 export function observe(b: Brain, e: BrainEvent, pet: Pet): Brain {
   let next = count(b, e.type);
+  // Everyday care trains Creativity a little (pats and scrubs fire often, so less).
+  const spark = { pat: 0.5, scrub: 0.1, redraw: 0, dressup: 0 }[e.type as string] ?? 2;
+  if (spark) next = gainSkill(next, "creativity", spark);
+  // Helped when it really needed it (the moments it asks for help): it learns it can
+  // trust you. Remembered once per bad spell, so it can bring it up later.
+  const need = MEETS[e.type];
+  if (need && pet[need] < 35) {
+    const line = `You looked after me when I was ${needWord(need)}.`;
+    if (next.memories.at(-1)?.text !== line) next = remember(count(next, "rescued"), line);
+    next = nudge(next, { sweet: 1, cling: 0.5, cheer: 0.5 });
+  }
   const n = next.counts[e.type];
   switch (e.type) {
     case "fed":
@@ -200,6 +216,21 @@ export function observe(b: Brain, e: BrainEvent, pet: Pet): Brain {
   }
 }
 
+// What you just did, as a chat line for the AI to react to, e.g. "*gives you pizza*".
+export function actionLine(e: BrainEvent): string | null {
+  switch (e.type) {
+    case "fed": return `*gives you ${e.item} to eat*`;
+    case "potion": return `*gives you a ${e.item}*`;
+    case "pat": return "*pats you*";
+    case "scrub": return "*scrubs you with soap*";
+    case "ball": return "*throws the ball for you*";
+    case "game": return `*played ${e.name} with you and scored ${e.score}*`;
+    case "redraw": return "*redrew how you look*";
+    case "dressup": return "*dresses you up*";
+    case "sleep": return null; // it's falling asleep, not chatting
+  }
+}
+
 // Called every second: it grows older, and a neglected pet slowly turns grumpy,
 // sarcastic and independent.
 export function drift(older: Brain, pet: Pet): Brain {
@@ -223,7 +254,8 @@ const MEAN = /\b(hate you|stupid|ugly|bad bug|dumb|shut up|annoying|smelly|loser
 // facts you teach it ("pizza is yummy"), and whether you're kind.
 export function learnFromChat(b: Brain, text: string): Brain {
   let next = nudge(hear(count(b, "chat"), text), { cling: 0.5 });
-  next = gainSkill(gainSkill(growOlder(next, AGE_PER_CHAT), "thinking", 2), "social", 3);
+  // Chatting is a little creative too, so Creativity isn't only from redrawing it.
+  next = gainSkill(gainSkill(gainSkill(growOlder(next, AGE_PER_CHAT), "thinking", 2), "social", 3), "creativity", 2);
   const fact = text.match(/^\s*([a-z0-9' ]{2,25}?) (is|are) ([a-z0-9' ]{2,30}?)[.!]?\s*$/i);
   if (fact && !/^(what|who|where|how|why|it|that|this)\b/i.test(fact[1])) {
     next = gainSkill(remember(next, `You taught me: ${fact[1]} ${fact[2]} ${fact[3]}.`), "thinking", 4);
