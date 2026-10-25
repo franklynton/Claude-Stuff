@@ -4,7 +4,7 @@ import { useEffect, useState, useSyncExternalStore } from 'react';
 import { getSessionSnapshot, getUsersSnapshot, logOut, parseUsers, subscribe } from '@/lib/localUsers';
 import { setSaveSlot } from '@/lib/storage';
 import { getSupabase } from '@/lib/supabase/client';
-import CloudAccount from './CloudAccount';
+import CloudAccount from './UsernameAccount';
 import LoginScreen from './LoginScreen';
 import PetHome from './PetHome';
 
