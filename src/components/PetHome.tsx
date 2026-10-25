@@ -34,6 +34,7 @@ import {
   clearPet,
   loadBrain,
   loadPet,
+  loadHideHelp,
   loadProgress,
   saveBrain,
   savePet,
@@ -51,6 +52,7 @@ import PixelEditor from "./PixelEditor";
 import Shop from "./Shop";
 import StatBar from "./StatBar";
 import Taskbar from "./Taskbar";
+import HowToPlay from "./HowToPlay";
 import Win98Window from "./Win98Window";
 
 const TICK_MS = 1000;
@@ -69,6 +71,7 @@ export default function PetHome({ userId, username, onLogOff }: { userId?: strin
   const [brain, setBrainState] = useState<Brain | null>(null);
   const [brainOpen, setBrainOpen] = useState(false);
   const [lobbyOpen, setLobbyOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const asleepRef = useRef(asleep);
   asleepRef.current = asleep;
 
@@ -81,6 +84,7 @@ export default function PetHome({ userId, username, onLogOff }: { userId?: strin
       setBrainState({ ...newBrain(), ...loadBrain() }); // fills in fields older saves lack
     }
     setProgress(loadProgress());
+    setHelpOpen(!loadHideHelp()); // the How to play window, right after logging in
     setLoaded(true);
   }, []);
 
@@ -436,9 +440,12 @@ export default function PetHome({ userId, username, onLogOff }: { userId?: strin
         </div>
       )}
 
+      {helpOpen && <HowToPlay onClose={() => setHelpOpen(false)} />}
+
       <Taskbar
         glitch={glitch}
         username={username}
+        onHelp={() => setHelpOpen(true)}
         onLogOff={
           onLogOff &&
           (() => {

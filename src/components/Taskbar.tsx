@@ -5,7 +5,8 @@ import { useEffect, useState } from "react";
 
 // Bottom taskbar with a clock. Once the pet is glitchy enough, the date "rolls
 // over" to 1900, the Y2K bug the pet is named after.
-export default function Taskbar({ glitch, username, onLogOff }: { glitch: number; username?: string; onLogOff?: () => void }) {
+export default function Taskbar(props: { glitch: number; username?: string; onLogOff?: () => void; onHelp?: () => void }) {
+  const { glitch, username, onLogOff, onHelp } = props;
   const [now, setNow] = useState<Date | null>(null);
   const [muted, setMute] = useState(false);
   const [startOpen, setStartOpen] = useState(false);
@@ -31,6 +32,17 @@ export default function Taskbar({ glitch, username, onLogOff }: { glitch: number
             <div className="title-bar-text">{username}</div>
           </div>
           <div className="window-body">
+            {onHelp && (
+              <button
+                className="mb-1 w-full"
+                onClick={() => {
+                  setStartOpen(false);
+                  onHelp();
+                }}
+              >
+                ❓ How to play
+              </button>
+            )}
             <button className="w-full" onClick={onLogOff}>
               🔑 Log Off {username}...
             </button>
