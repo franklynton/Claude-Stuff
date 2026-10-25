@@ -3,7 +3,26 @@ const DEFAULT_MODEL = "openrouter/free";
 
 type Turn = { role: "user" | "assistant"; content: string };
 
+// "openrouter/free" picks a random free model each time, and sometimes that's a
+// safety checker (it answers "User Safety: safe") or a model that shows its thinking.
+// Those aren't chat replies, so tidy or skip them and try another model.
+const NOT_A_REPLY = /^\s*((user|response|agent|prompt)\s*safety|safety\s*(rating|assessment)?)\s*:|^\s*(safe|unsafe)\s*($|\n|S\d)|^\s*S\d{1,2}\s*$/i;
+
+function clean(text: string | null): string | null {
+  if (!text) return null;
+  const reply = text.replace(/<think>[\s\S]*?(<\/think>|$)/gi, "").trim();
+  return reply && !NOT_A_REPLY.test(reply) ? reply : null;
+}
+
 export async function askOpenRouter(system: string, messages: Turn[], maxTokens: number): Promise<string | null> {
+  for (let tries = 0; tries < 3; tries++) {
+    const reply = clean(await askOnce(system, messages, maxTokens));
+    if (reply) return reply;
+  }
+  return null; // the caller falls back to a built-in reply
+}
+
+async function askOnce(system: string, messages: Turn[], maxTokens: number): Promise<string | null> {
   const key = process.env.OPENROUTER_API_KEY;
   if (!key) return null;
   const model = process.env.OPENROUTER_MODEL || DEFAULT_MODEL;
