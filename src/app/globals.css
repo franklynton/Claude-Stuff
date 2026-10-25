@@ -40,6 +40,34 @@ body {
   to { transform: translateX(-100%); }
 }
 
+/* The red power button (sign out) at the end of the top bar: the login screen's
+   "Turn off computer" tile, with 98.css's grey button look undone. */
+.power-btn,
+.power-btn:not(:disabled):active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  min-width: 0;
+  height: 24px;
+  min-height: 0;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 4px;
+  background: linear-gradient(to bottom, #f0704a, #d9381e 55%, #b52a12);
+  box-shadow: none;
+}
+.power-btn:hover {
+  filter: brightness(1.2);
+}
+.power-btn:focus {
+  outline: none;
+}
+.power-btn:focus-visible {
+  outline: 2px solid #ffcc33;
+  outline-offset: 1px;
+}
+
 .pixelated {
   image-rendering: pixelated;
 }

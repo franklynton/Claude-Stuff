@@ -69,11 +69,39 @@ export function saveBrain(brain: Brain): void {
   } catch {}
 }
 
+// Signing out pauses the pet: the time until the next sign-in doesn't count.
+// (Just closing the tab doesn't pause it; the pet catches up on that time.)
+const PAUSE_KEY = () => slot + "paused";
+
+export type Pause = { asleep: boolean };
+
+export function savePause(pause: Pause): void {
+  try {
+    localStorage.setItem(PAUSE_KEY(), JSON.stringify(pause));
+  } catch {}
+}
+
+export function loadPause(): Pause | null {
+  try {
+    const raw = localStorage.getItem(PAUSE_KEY());
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearPause(): void {
+  try {
+    localStorage.removeItem(PAUSE_KEY());
+  } catch {}
+}
+
 export function clearPet(): void {
   try {
     localStorage.removeItem(KEY());
     localStorage.removeItem(PROGRESS_KEY());
     localStorage.removeItem(BRAIN_KEY());
+    localStorage.removeItem(PAUSE_KEY());
   } catch {}
 }
 

@@ -25,7 +25,8 @@ interface Props {
 // The pet's house: tabs for each room, the room scene, and that room's items.
 export default function House({ pet, progress, asleep, setAsleep, apply, onPlayGame, onPlaySnake, onNudge }: Props) {
   const lastScrub = useRef(0);
-  const [roomKey, setRoomKey] = useState<RoomKey>("living");
+  // A bug that was asleep when you signed out is still asleep, so it's in its bedroom.
+  const [roomKey, setRoomKey] = useState<RoomKey>(asleep ? "bedroom" : "living");
   const [particles, setParticles] = useState<Particle[]>([]);
   const [hopping, setHopping] = useState(false);
   const [balls, setBalls] = useState<number[]>([]);
