@@ -76,3 +76,21 @@ export function clearPet(): void {
     localStorage.removeItem(BRAIN_KEY());
   } catch {}
 }
+
+// Whether this account ticked "Don't show this again" on the How to play window.
+const HELP_KEY = () => slot + "hideHelp";
+
+export function loadHideHelp(): boolean {
+  try {
+    return localStorage.getItem(HELP_KEY()) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function saveHideHelp(hide: boolean): void {
+  try {
+    if (hide) localStorage.setItem(HELP_KEY(), "1");
+    else localStorage.removeItem(HELP_KEY());
+  } catch {}
+}
