@@ -362,3 +362,9 @@ body {
   border-top: 0;
   border-bottom-color: #ffffe1;
 }
+
+/* Windows can be resized from the bottom-right corner, like the real thing. */
+.win98-movable {
+  resize: both;
+  overflow: auto;
+}
