@@ -92,10 +92,12 @@ export default function PetChat({ pet, brain, setBrain, asleep, action }: Props)
   useEffect(() => () => clearTimeout(answerTimer.current), []);
 
   const answer = async () => {
-    const { pet: p, brain: b, sending: busy, voice: talk, lines: history } = latest.current;
+    const { pet: p, brain: b, sending: busy, voice: talk, lines: history, asleep: zzz } = latest.current;
     if (!unanswered.current) return;
     if (busy) return answerSoon(); // after the reply in progress
     unanswered.current = 0;
+    // A sleeping bug can't talk (and costs no AI call).
+    if (zzz) return setLines((l) => [...l, { from: "pet", text: "Zzz... 💤", at: Date.now() }]);
     setSending(true);
     const signal = thinking.current?.signal;
     try {
@@ -170,7 +172,7 @@ export default function PetChat({ pet, brain, setBrain, asleep, action }: Props)
           send();
         }}
       >
-        <input type="text" className="flex-1" value={draft} maxLength={200} onChange={(e) => setDraft(e.target.value)} />
+        <input type="text" className="flex-1" placeholder={asleep ? `${pet.name} is asleep...` : ""} value={draft} maxLength={200} onChange={(e) => setDraft(e.target.value)} />
         <button type="submit" disabled={!draft.trim()}>
           Send
         </button>
