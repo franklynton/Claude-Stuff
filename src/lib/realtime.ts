@@ -1,5 +1,5 @@
 import type { RealtimeChannel } from "@supabase/supabase-js";
-import type { LobbyEvent, LobbyMove, LobbyPet } from "@/types/lobby";
+import type { LobbyEvent, LobbyMove, LobbyPet, PongMessage } from "@/types/lobby";
 import { getSupabase } from "./supabase/client";
 
 // Joins the shared lobby. With Supabase configured this is the `lobby` Realtime
@@ -158,6 +158,51 @@ export function joinLobby(me: LobbyPet, handlers: LobbyHandlers): LobbyRoom {
       const old = channel;
       channel = null;
       if (old) channelFreed = supabase.removeChannel(old);
+    },
+  };
+}
+
+export interface MatchRoom {
+  send: (msg: PongMessage) => void;
+  leave: () => void;
+}
+
+// The same wait as channelFreed above, for Pong's per-game channels.
+let matchFreed: Promise<unknown> = Promise.resolve();
+
+// A Pong game's own channel, so its stream of paddle and ball messages only goes
+// to the two players, not to everyone in the lobby. Without Supabase, a
+// BroadcastChannel again.
+export function joinMatch(match: string, onMessage: (msg: PongMessage) => void): MatchRoom {
+  const supabase = getSupabase();
+  if (!supabase) {
+    const bc = new BroadcastChannel(`millennium-bug-pong:${match}`);
+    bc.onmessage = ({ data }) => onMessage(data);
+    return { send: (msg) => bc.postMessage(msg), leave: () => bc.close() };
+  }
+
+  let channel: RealtimeChannel | null = null;
+  let left = false;
+  matchFreed = matchFreed
+    .catch(() => {})
+    .then(() => {
+      if (left) return;
+      channel = supabase
+        .channel(`pong:${match}`)
+        .on("broadcast", { event: "pong" }, ({ payload }) => onMessage(payload as PongMessage))
+        .subscribe();
+    });
+
+  return {
+    // Only once joined. The game's hello handshake makes sure both players have
+    // joined before play starts, saying hello until it's heard.
+    send: (msg) => {
+      if (channel?.state === "joined") channel.send({ type: "broadcast", event: "pong", payload: msg });
+    },
+    leave: () => {
+      left = true;
+      if (channel) matchFreed = supabase.removeChannel(channel);
+      channel = null;
     },
   };
 }
