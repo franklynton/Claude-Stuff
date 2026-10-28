@@ -44,6 +44,7 @@ The whole thing lives inside a Windows 98-style desktop, complete with an XP-sty
 npm install
 cp .env.example .env.local   # optional: add OPENROUTER_API_KEY and Supabase keys
 npm run dev                  # http://localhost:3000
+npm test                     # unit tests for pet needs, glitching and the AI rate limit
 ```
 
 Without any keys it still works: the pet answers with built-in lines and the lobby connects tabs on the same computer.
